@@ -1,17 +1,18 @@
 package edu.smu.smusql;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 public abstract class AbstractTable {
     public Collection<Row> rows; 
     public Column[] cols; 
     public String tableName;
-    public Map<String, Index> indexes; 
+    public Map<Column, Index> indexes; // column and index 
     
     public AbstractTable(String name) {
         this.tableName = name;
-        
+        this.indexes = new HashMap<>();
     }
 
     // public AbstractTable(Collection<Row> rows, Collection<Column> cols, String tableName) {
@@ -46,6 +47,10 @@ public abstract class AbstractTable {
 
     public void addRow(Row row) {
         this.rows.add(row);
+    }
+
+    public void addIndex(Column c, Index i) {
+        indexes.put(c, i);
     }
     
     // public void addCol(Column col) {

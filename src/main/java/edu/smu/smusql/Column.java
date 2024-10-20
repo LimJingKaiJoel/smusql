@@ -2,11 +2,13 @@ package edu.smu.smusql;
 
 public class Column {
     private String name;
-    private int id; 
+    private int number; 
+    private char type; 
 
     public Column(String name, int id) {
         this.name = name;
-        this.id = id; 
+        this.number = id; 
+        this.type = 's';
     }
 
     public String getName() {
@@ -17,15 +19,21 @@ public class Column {
         this.name = name;
     }
 
-    public int getId() {
-        return id;
+    public int getNumber() {
+        return number;
     }
 
-    public void setId(int id) {
-        this.id = id;
-    } 
+    public void setNumber(int id) {
+        this.number = id;
+    }
 
-    
+    public char getType() {
+        return type;
+    }
+
+    public void setType(char type) {
+        this.type = type;
+    } 
 
     
 }
