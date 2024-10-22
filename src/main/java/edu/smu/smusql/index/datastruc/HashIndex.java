@@ -1,6 +1,8 @@
-package edu.smu.smusql.index;
+package edu.smu.smusql.index.datastruc;
 
 import java.util.*;
+
+import edu.smu.smusql.index.Index;
 
 // Optimises for equality queries! 
 public class HashIndex<K extends Comparable<K>, V> implements Index<K, V> {

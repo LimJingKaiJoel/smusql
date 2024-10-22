@@ -1,3 +1,4 @@
+package edu.smu.smusql.index.datastruc;
 // package edu.smu.smusql.index;
 
 // // useless class i realised we don't need to code our own node, use java's node

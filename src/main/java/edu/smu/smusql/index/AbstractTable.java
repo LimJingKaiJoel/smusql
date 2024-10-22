@@ -1,8 +1,9 @@
-package edu.smu.smusql;
+package edu.smu.smusql.index;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import edu.smu.smusql.*;;
 
 public abstract class AbstractTable {
     public Collection<Row> rows; 
@@ -14,12 +15,6 @@ public abstract class AbstractTable {
         this.tableName = name;
         this.indexes = new HashMap<>();
     }
-
-    // public AbstractTable(Collection<Row> rows, Collection<Column> cols, String tableName) {
-    //     this.rows = rows;
-    //     this.cols = cols;
-    //     this.tableName = tableName;
-    // }
 
     public Collection<Row> getRows() {
         return rows;
@@ -52,8 +47,5 @@ public abstract class AbstractTable {
     public void addIndex(Column c, Index i) {
         indexes.put(c, i);
     }
-    
-    // public void addCol(Column col) {
-    //     this.cols.add(col);
-    // }
 }
+

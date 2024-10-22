@@ -1,9 +1,11 @@
-package edu.smu.smusql;
+package edu.smu.smusql.index;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+
+import edu.smu.smusql.*;
 
 public class TableArrayList extends AbstractTable {
 

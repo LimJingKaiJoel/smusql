@@ -1,7 +1,9 @@
-package edu.smu.smusql.index;
+package edu.smu.smusql.index.datastruc;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListMap;
+
+import edu.smu.smusql.index.Index;
 
 /**
  * SkipListIndex uses Java's ConcurrentSkipListMap.
