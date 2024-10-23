@@ -17,6 +17,12 @@ public class Main {
         System.out.println("smuSQL Starter Code version 0.5");
         System.out.println("Have fun, and good luck!");
 
+        // dbEngine.executeSQL("CREATE TABLE users (id, name, age, city)");
+        // dbEngine.executeSQL("INSERT INTO users VALUES (1, 'John', 20, 'New York')");
+        // dbEngine.executeSQL("INSERT INTO users VALUES (2, 'Jane', 21, 'Los Angeles')");
+        // dbEngine.executeSQL("INSERT INTO users VALUES (3, 'Jim', 22, 'Chicago')");
+        // System.out.println(dbEngine.executeSQL("SELECT * FROM users"));
+
         while (true) {
             System.out.print("smusql> ");
             String query = scanner.nextLine();
