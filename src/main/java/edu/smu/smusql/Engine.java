@@ -39,6 +39,7 @@ public class Engine {
         String columnNames = tokens[3].substring(1, tokens[3].length() - 1);
         String[] columnNamesArray = columnNames.split(",");
         for (String columnName : columnNamesArray) {
+            columnName = columnName.trim();
             columns.add(columnName);
         }
         database.put(tableName, new Table(columns));
@@ -63,6 +64,7 @@ public class Engine {
         String[] valuesArray = values.split(",");
         List<String> valuesList = new ArrayList<>();
         for (String value : valuesArray) {
+            value = value.trim();
             valuesList.add(value);
         }
         table.insert(valuesList);
@@ -91,8 +93,7 @@ public class Engine {
     }
 
     public String update(String[] tokens) {
-        // TODO: Handle properly
-        if (tokens.length < 5 || !tokens[2].equalsIgnoreCase("SET")) {
+        if (tokens.length < 6 || !tokens[2].equalsIgnoreCase("SET")) {
             return "ERROR: Invalid UPDATE statement";
         }
         String tableName = tokens[1];
@@ -100,9 +101,31 @@ public class Engine {
         if (table == null) {
             return "ERROR: Table " + tableName + " does not exist";
         }
-        String column = tokens[3];
-        String value = tokens[4];
-        int updatedRows = table.update(column, value);
+
+        Map<String, String> updates = new HashMap<>();
+        List<String> conditions = new ArrayList<>();
+        boolean inWhere = false;
+
+        for (int i = 3; i < tokens.length; i++) {
+            if (tokens[i].equalsIgnoreCase("WHERE")) {
+                inWhere = true;
+                continue;
+            }
+            if (!inWhere) {
+                if (i + 2 < tokens.length && tokens[i + 1].equals("=")) {
+                    System.out.println(tokens[i] + " " + tokens[i + 2]);
+                    updates.put(tokens[i], tokens[i + 2]);
+                    i += 2;
+                }
+            } else {
+                conditions.add(tokens[i]);
+            }
+        }
+
+        System.out.println(updates);
+        System.out.println(conditions);
+
+        int updatedRows = table.update(updates, conditions);
         return updatedRows + " row(s) updated in " + tableName;
     }
 
@@ -196,17 +219,52 @@ public class Engine {
             return result.toString();
         }
 
-        public int update(String column, String value) {
-            int columnIndex = columns.indexOf(column);
-            if (columnIndex == -1) {
-                return 0;
-            }
+        public int update(Map<String, String> updates, List<String> conditions) {
             int updatedRows = 0;
             for (List<String> row : rows) {
-                row.set(columnIndex, value);
-                updatedRows++;
+                if (matchesConditions(row, conditions)) {
+                    for (Map.Entry<String, String> entry : updates.entrySet()) {
+                        int columnIndex = columns.indexOf(entry.getKey());
+                        if (columnIndex != -1) {
+                            row.set(columnIndex, entry.getValue());
+                        }
+                    }
+                    updatedRows++;
+                }
             }
             return updatedRows;
+        }
+
+        private boolean matchesConditions(List<String> row, List<String> conditions) {
+            if (conditions.isEmpty()) {
+                return true;
+            }
+            // Simple condition parsing (assumes AND logic)
+            for (int i = 0; i < conditions.size(); i += 3) {
+                String column = conditions.get(i);
+                String operator = conditions.get(i + 1);
+                String value = conditions.get(i + 2);
+                int columnIndex = columns.indexOf(column);
+                if (columnIndex != -1) {
+                    String rowValue = row.get(columnIndex);
+                    if (!compareValues(rowValue, operator, value)) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        private boolean compareValues(String rowValue, String operator, String value) {
+            switch (operator) {
+                case "=":
+                    return rowValue.equals(value);
+                case "!=":
+                    return !rowValue.equals(value);
+                // Add more operators as needed
+                default:
+                    return false;
+            }
         }
 
         public int delete() {
