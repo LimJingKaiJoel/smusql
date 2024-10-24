@@ -5,6 +5,8 @@ import java.util.regex.*;
 import edu.smu.smusql.table.AbstractTable;
 import edu.smu.smusql.utils.Helper;
 import edu.smu.smusql.table.DefaultTable;
+// import edu.smu.smusql.table.ParallelStreamTable;
+
 import java.util.Stack;
 
 public class Engine {
@@ -37,6 +39,7 @@ public class Engine {
     }
 
     protected AbstractTable createTable(String name, List<String> columns) {
+        // CHANGE THIS TABLE AS NEEDED
         return new DefaultTable(name, columns);
     }
 

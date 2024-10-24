@@ -3,7 +3,6 @@ package edu.smu.smusql.table;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
@@ -99,7 +98,7 @@ public abstract class AbstractTable {
         return updatedRows;
     }
 
-    private boolean matchesConditions(Row row, List<String> conditions) {
+    protected boolean matchesConditions(Row row, List<String> conditions) {
         if (conditions.isEmpty()) {
             return true;
         }
