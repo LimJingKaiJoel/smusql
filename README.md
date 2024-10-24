@@ -52,3 +52,24 @@ UPDATE users SET name = Jack WHERE id = 1
 ```bash
 DELETE FROM users WHERE id = 1
 ```
+
+## DEFAULT IMPL
+
+```bash
+Finished processing 1000000 queries.
+Time elapsed: 2582.001823686 seconds
+
+Finished processing 300000 queries.
+Total time elapsed: 131.251024004 seconds
+Total number of queries: 300000
+Queries per second: 2285.696452858587
+Average query time: 0.43750 milliseconds
+Query type 0 took 0.01564 milliseconds on average, for 49620 queries
+Query type 1 took 0.00020 milliseconds on average, for 49807 queries
+Query type 2 took 0.45848 milliseconds on average, for 50126 queries
+Query type 3 took 0.45393 milliseconds on average, for 50019 queries
+Query type 4 took 1.16365 milliseconds on average, for 50282 queries
+Query type 5 took 0.51879 milliseconds on average, for 50146 queries
+Time elapsed: 131.277091955 seconds
+```
+
