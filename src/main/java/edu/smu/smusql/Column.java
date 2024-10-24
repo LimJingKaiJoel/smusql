@@ -5,6 +5,12 @@ public class Column {
     private int number; 
     private char type; 
 
+    public Column(String name) {
+        this.name = name;
+        this.number = 0;
+        this.type = 's';
+    }
+
     public Column(String name, int id) {
         this.name = name;
         this.number = id; 

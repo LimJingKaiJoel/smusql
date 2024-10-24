@@ -6,16 +6,32 @@ import java.util.*;
 
 public class Main {
     /*
-     *  Main method for accessing the command line interface of the database engine.
-     *  MODIFICATION OF THIS FILE IS NOT RECOMMENDED!
+     * Main method for accessing the command line interface of the database engine.
+     * MODIFICATION OF THIS FILE IS NOT RECOMMENDED!
      */
     static Engine dbEngine = new Engine();
+
     public static void main(String[] args) {
 
         Scanner scanner = new Scanner(System.in);
 
         System.out.println("smuSQL Starter Code version 0.5");
         System.out.println("Have fun, and good luck!");
+
+        // SAMPLE QUERIES FOR TESTING
+
+        // dbEngine.executeSQL("CREATE TABLE users (id, name, age, city)");
+        // dbEngine.executeSQL("INSERT INTO users VALUES (1, 'Alice', 25, 'New York')");
+        // dbEngine.executeSQL("INSERT INTO users VALUES (2, 'Bob', 30, 'Los Angeles')");
+        // System.out.println(dbEngine.executeSQL("SELECT * FROM users"));
+        // System.out.println(dbEngine.executeSQL("SELECT * FROM users WHERE id = 1"));
+        // dbEngine.executeSQL("UPDATE users SET age = 31 WHERE city = 'Los Angeles' OR id = 1");
+        // System.out.println(dbEngine.executeSQL("SELECT * FROM users"));
+        // dbEngine.executeSQL("UPDATE users SET age = 55 WHERE id = 1 AND city = 'New York'");
+        // System.out.println(dbEngine.executeSQL("SELECT * FROM users"));
+        // dbEngine.executeSQL(
+        //         "DELETE FROM users WHERE (id = 1 AND city = 'New York') OR (id = 2 AND city = 'Los Angeles')");
+        // System.out.println(dbEngine.executeSQL("SELECT * FROM users"));
 
         while (true) {
             System.out.print("smusql> ");
@@ -37,12 +53,13 @@ public class Main {
         scanner.close();
     }
 
-
     /*
-     *  Below is the code for auto-evaluating your work.
-     *  DO NOT CHANGE ANYTHING BELOW THIS LINE!
+     * Below is the code for auto-evaluating your work.
+     * DO NOT CHANGE ANYTHING BELOW THIS LINE!
      */
     public static void autoEvaluate() {
+
+        long startTime = System.nanoTime();
 
         // Set the number of queries to execute
         int numberOfQueries = 1000000;
@@ -58,38 +75,65 @@ public class Main {
         // Prepopulate the tables in preparation for evaluation
         prepopulateTables(random);
 
+        long queryStartTime;
+
+        Map<Integer, ArrayList<Double>> queryTimes = new HashMap<>();
+
         // Loop to simulate millions of queries
         for (int i = 0; i < numberOfQueries; i++) {
-            int queryType = random.nextInt(6);  // Randomly choose the type of query to execute
+            queryStartTime = System.nanoTime();
+            int queryType = random.nextInt(6); // Randomly choose the type of query to execute
 
             switch (queryType) {
-                case 0:  // INSERT query
+                case 0: // INSERT query
                     insertRandomData(random);
                     break;
-                case 1:  // SELECT query (simple)
+                case 1: // SELECT query (simple)
                     selectRandomData(random);
                     break;
-                case 2:  // UPDATE query
+                case 2: // UPDATE query
                     updateRandomData(random);
                     break;
-                case 3:  // DELETE query
+                case 3: // DELETE query
                     deleteRandomData(random);
                     break;
-                case 4:  // Complex SELECT query with WHERE, AND, OR, >, <, LIKE
+                case 4: // Complex SELECT query with WHERE, AND, OR, >, <, LIKE
                     complexSelectQuery(random);
                     break;
-                case 5:  // Complex UPDATE query with WHERE
+                case 5: // Complex UPDATE query with WHERE
                     complexUpdateQuery(random);
                     break;
             }
 
+            long queryEndTime = System.nanoTime();
+            long queryElapsedTime = queryEndTime - queryStartTime;
+            double queryElapsedTimeInSecond = (double) queryElapsedTime / 1_000_000_000;
+            queryTimes.computeIfAbsent(queryType, k -> new ArrayList<>()).add(queryElapsedTimeInSecond);
+
             // Print progress every 100,000 queries
-            if (i % 10000 == 0){
-                System.out.println("Processed " + i + " queries...");
+            if (i % 10000 == 0) {
+                System.out.println("Processed " + i + " queries... ");
             }
         }
 
+        long stopTime = System.nanoTime();
+        long elapsedTime = stopTime - startTime;
+        double elapsedTimeInSecond = (double) elapsedTime / 1_000_000_000;
+
         System.out.println("Finished processing " + numberOfQueries + " queries.");
+
+        // METRICS
+        System.out.println("Total time elapsed: " + elapsedTimeInSecond + " seconds");
+        System.out.println("Total number of queries: " + numberOfQueries);
+        System.out.println("Queries per second: " + numberOfQueries / elapsedTimeInSecond);
+        System.out.println("Average query time: " + String.format("%.5f", elapsedTimeInSecond / numberOfQueries * 1000)
+                + " milliseconds");
+        queryTimes.forEach((key, value) -> {
+            System.out.println("Query type " + key + " took "
+                    + String.format("%.5f", value.stream().mapToDouble(Double::doubleValue).average().orElse(0) * 1000)
+                    + " milliseconds on average, for " + value.size() + " queries");
+        });
+
     }
 
     private static void prepopulateTables(Random random) {
@@ -108,7 +152,8 @@ public class Main {
             String productName = "Product" + i;
             double price = 10 + (i % 990); // Prices between $10 and $1000
             String category = getRandomCategory(random);
-            String insertCommand = String.format("INSERT INTO products VALUES (%d, '%s', %.2f, '%s')", i, productName, price, category);
+            String insertCommand = String.format("INSERT INTO products VALUES (%d, '%s', %.2f, '%s')", i, productName,
+                    price, category);
             dbEngine.executeSQL(insertCommand);
         }
         System.out.println("Prepopulating orders");
@@ -118,7 +163,8 @@ public class Main {
             int product_id = random.nextInt(9999);
             int quantity = random.nextInt(1, 100);
             String category = getRandomCategory(random);
-            String insertCommand = String.format("INSERT INTO orders VALUES (%d, %d, %d, %d)", i, user_id, product_id, quantity);
+            String insertCommand = String.format("INSERT INTO orders VALUES (%d, %d, %d, %d)", i, user_id, product_id,
+                    quantity);
             dbEngine.executeSQL(insertCommand);
         }
     }
@@ -132,7 +178,8 @@ public class Main {
                 String name = "User" + id;
                 int age = random.nextInt(60) + 20;
                 String city = getRandomCity(random);
-                String insertUserQuery = "INSERT INTO users VALUES (" + id + ", '" + name + "', " + age + ", '" + city + "')";
+                String insertUserQuery = "INSERT INTO users VALUES (" + id + ", '" + name + "', " + age + ", '" + city
+                        + "')";
                 dbEngine.executeSQL(insertUserQuery);
                 break;
             case 1: // Insert into products table
@@ -140,7 +187,8 @@ public class Main {
                 String productName = "Product" + productId;
                 double price = 50 + (random.nextDouble() * 1000);
                 String category = getRandomCategory(random);
-                String insertProductQuery = "INSERT INTO products VALUES (" + productId + ", '" + productName + "', " + price + ", '" + category + "')";
+                String insertProductQuery = "INSERT INTO products VALUES (" + productId + ", '" + productName + "', "
+                        + price + ", '" + category + "')";
                 dbEngine.executeSQL(insertProductQuery);
                 break;
             case 2: // Insert into orders table
@@ -148,7 +196,8 @@ public class Main {
                 int userId = random.nextInt(10000) + 1;
                 int productIdRef = random.nextInt(1000) + 1;
                 int quantity = random.nextInt(10) + 1;
-                String insertOrderQuery = "INSERT INTO orders VALUES (" + orderId + ", " + userId + ", " + productIdRef + ", " + quantity + ")";
+                String insertOrderQuery = "INSERT INTO orders VALUES (" + orderId + ", " + userId + ", " + productIdRef
+                        + ", " + quantity + ")";
                 dbEngine.executeSQL(insertOrderQuery);
                 break;
         }
@@ -171,7 +220,6 @@ public class Main {
             default:
                 selectQuery = "SELECT * FROM users";
         }
-        dbEngine.executeSQL(selectQuery);
     }
 
     // Helper method to update random data in the tables
@@ -221,9 +269,10 @@ public class Main {
         }
     }
 
-    // Helper method to execute a complex SELECT query with WHERE, AND, OR, >, <, LIKE
+    // Helper method to execute a complex SELECT query with WHERE, AND, OR, >, <,
+    // LIKE
     private static void complexSelectQuery(Random random) {
-        int tableChoice = random.nextInt(2);  // Complex queries only on users and products for now
+        int tableChoice = random.nextInt(2); // Complex queries only on users and products for now
         String complexSelectQuery;
         switch (tableChoice) {
             case 0: // Complex SELECT on users
@@ -240,7 +289,8 @@ public class Main {
             case 2: // Complex SELECT on products
                 double minPrice2 = 50 + (random.nextDouble() * 200);
                 String category = getRandomCategory(random);
-                complexSelectQuery = "SELECT * FROM products WHERE price > " + minPrice2 + " AND category = " + category;
+                complexSelectQuery = "SELECT * FROM products WHERE price > " + minPrice2 + " AND category = "
+                        + category;
                 break;
             default:
                 complexSelectQuery = "SELECT * FROM users";
@@ -250,7 +300,7 @@ public class Main {
 
     // Helper method to execute a complex UPDATE query with WHERE
     private static void complexUpdateQuery(Random random) {
-        int tableChoice = random.nextInt(2);  // Complex updates only on users and products for now
+        int tableChoice = random.nextInt(2); // Complex updates only on users and products for now
         switch (tableChoice) {
             case 0: // Complex UPDATE on users
                 int newAge = random.nextInt(60) + 20;
@@ -261,7 +311,8 @@ public class Main {
             case 1: // Complex UPDATE on products
                 double newPrice = 50 + (random.nextDouble() * 1000);
                 String category = getRandomCategory(random);
-                String updateProductQuery = "UPDATE products SET price = " + newPrice + " WHERE category = '" + category + "'";
+                String updateProductQuery = "UPDATE products SET price = " + newPrice + " WHERE category = '" + category
+                        + "'";
                 dbEngine.executeSQL(updateProductQuery);
                 break;
         }
@@ -269,13 +320,15 @@ public class Main {
 
     // Helper method to return a random city
     private static String getRandomCity(Random random) {
-        String[] cities = {"New York", "Los Angeles", "Chicago", "Boston", "Miami", "Seattle", "Austin", "Dallas", "Atlanta", "Denver"};
+        String[] cities = { "New York", "Los Angeles", "Chicago", "Boston", "Miami", "Seattle", "Austin", "Dallas",
+                "Atlanta", "Denver" };
         return cities[random.nextInt(cities.length)];
     }
 
     // Helper method to return a random category for products
     private static String getRandomCategory(Random random) {
-        String[] categories = {"Electronics", "Appliances", "Clothing", "Furniture", "Toys", "Sports", "Books", "Beauty", "Garden"};
+        String[] categories = { "Electronics", "Appliances", "Clothing", "Furniture", "Toys", "Sports", "Books",
+                "Beauty", "Garden" };
         return categories[random.nextInt(categories.length)];
     }
 }
