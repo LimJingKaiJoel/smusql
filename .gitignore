@@ -39,3 +39,4 @@ build/
 
 ### Java Class Files ###
 *.class
+/out/

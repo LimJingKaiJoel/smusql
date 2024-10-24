@@ -2,10 +2,19 @@
 
 ## Running the CLI Tool
 
-Assuming you are in the source folder of the Java files
+Assuming you are in the ROOT of this directory.
+
+A makefile has been created with all the common commands needed to work with the Java code.
 
 ```bash
-javac -d . *.java && java edu.smu.smusql.Main
+# cleans, builds and runs the project
+make exec
+
+# just compile/build
+make build
+
+# just run using previously compiled classes
+make run
 ```
 
 ## Commands
