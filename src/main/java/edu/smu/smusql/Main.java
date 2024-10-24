@@ -22,18 +22,15 @@ public class Main {
 
         // dbEngine.executeSQL("CREATE TABLE users (id, name, age, city)");
         // dbEngine.executeSQL("INSERT INTO users VALUES (1, 'Alice', 25, 'New York')");
-        // dbEngine.executeSQL("INSERT INTO users VALUES (2, 'Bob', 30, 'Los
-        // Angeles')");
+        // dbEngine.executeSQL("INSERT INTO users VALUES (2, 'Bob', 30, 'Los Angeles')");
         // System.out.println(dbEngine.executeSQL("SELECT * FROM users"));
         // System.out.println(dbEngine.executeSQL("SELECT * FROM users WHERE id = 1"));
-        // dbEngine.executeSQL("UPDATE users SET age = 31 WHERE city = 'Los Angeles' OR
-        // id = 1");
+        // dbEngine.executeSQL("UPDATE users SET age = 31 WHERE city = 'Los Angeles' OR id = 1");
         // System.out.println(dbEngine.executeSQL("SELECT * FROM users"));
-        // dbEngine.executeSQL("UPDATE users SET age = 55 WHERE id = 1 AND city = 'New
-        // York'");
+        // dbEngine.executeSQL("UPDATE users SET age = 55 WHERE id = 1 AND city = 'New York'");
         // System.out.println(dbEngine.executeSQL("SELECT * FROM users"));
-        // dbEngine.executeSQL("DELETE FROM users WHERE (id = 1 AND city = 'New York')
-        // OR (id = 2 AND city = 'Los Angeles')");
+        // dbEngine.executeSQL(
+        //         "DELETE FROM users WHERE (id = 1 AND city = 'New York') OR (id = 2 AND city = 'Los Angeles')");
         // System.out.println(dbEngine.executeSQL("SELECT * FROM users"));
 
         while (true) {
@@ -65,7 +62,7 @@ public class Main {
         long startTime = System.nanoTime();
 
         // Set the number of queries to execute
-        int numberOfQueries = 300000;
+        int numberOfQueries = 1000000;
 
         // Create tables
         dbEngine.executeSQL("CREATE TABLE users (id, name, age, city)");

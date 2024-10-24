@@ -9,21 +9,31 @@ import java.util.Stack;
 
 public class Engine {
     private Map<String, AbstractTable> database = new HashMap<>();
+    private static final Pattern CREATE_PATTERN = Pattern.compile("(?i)CREATE\\s+TABLE\\s+(\\w+)\\s*\\((.+)\\)");
+    private static final Pattern INSERT_PATTERN = Pattern.compile("(?i)INSERT\\s+INTO\\s+(\\w+)\\s+VALUES\\s*\\((.+)\\)");
+    private static final Pattern SELECT_PATTERN = Pattern.compile("(?i)SELECT\\s+(.+?)\\s+FROM\\s+(\\w+)(?:\\s+WHERE\\s+(.+))?");
+    private static final Pattern UPDATE_PATTERN = Pattern.compile("(?i)UPDATE\\s+(\\w+)\\s+SET\\s+(.+?)(?:\\s+WHERE\\s+(.+))?$");
+    private static final Pattern DELETE_PATTERN = Pattern.compile("(?i)DELETE\\s+FROM\\s+(\\w+)(?:\\s+WHERE\\s+(.+))?");
 
     public String executeSQL(String query) {
-        if (query.matches("(?i)^CREATE\\s+TABLE\\s+.*")) {
+        if (CREATE_PATTERN.matcher(query).matches()) {
             return create(query);
-        } else if (query.matches("(?i)^INSERT\\s+INTO\\s+.*")) {
+        } else if (INSERT_PATTERN.matcher(query).matches()) {
             return insert(query);
-        } else if (query.matches("(?i)^SELECT\\s+.*")) {
+        } else if (SELECT_PATTERN.matcher(query).matches()) {
             return select(query);
-        } else if (query.matches("(?i)^UPDATE\\s+.*")) {
+        } else if (UPDATE_PATTERN.matcher(query).matches()) {
             return update(query);
-        } else if (query.matches("(?i)^DELETE\\s+FROM\\s+.*")) {
+        } else if (DELETE_PATTERN.matcher(query).matches()) {
             return delete(query);
         } else {
             return "ERROR: Unknown command";
         }
+    }
+
+    private AbstractTable getTable(String tableName) {
+        AbstractTable table = database.get(tableName);
+        return table;
     }
 
     protected AbstractTable createTable(String name, List<String> columns) {
@@ -31,12 +41,10 @@ public class Engine {
     }
 
     public String create(String query) {
-        Pattern pattern = Pattern.compile("(?i)CREATE\\s+TABLE\\s+(\\w+)\\s*\\((.+)\\)");
-        Matcher matcher = pattern.matcher(query);
+        Matcher matcher = CREATE_PATTERN.matcher(query);
         if (matcher.find()) {
             String tableName = matcher.group(1);
-            String[] columns = matcher.group(2).split("\\s*,\\s*");
-            columns = Helper.trimQuotes(columns);
+            String[] columns = Helper.trimQuotes(matcher.group(2).split("\\s*,\\s*"));
             database.put(tableName, createTable(tableName, Arrays.asList(columns)));
             return "Table " + tableName + " created with columns: " + String.join(", ", columns);
         }
@@ -44,13 +52,11 @@ public class Engine {
     }
 
     public String insert(String query) {
-        Pattern pattern = Pattern.compile("(?i)INSERT\\s+INTO\\s+(\\w+)\\s+VALUES\\s*\\((.+)\\)");
-        Matcher matcher = pattern.matcher(query);
+        Matcher matcher = INSERT_PATTERN.matcher(query);
         if (matcher.find()) {
             String tableName = matcher.group(1);
-            String[] values = matcher.group(2).split("\\s*,\\s*");
-            values = Helper.trimQuotes(values);
-            AbstractTable table = database.get(tableName);
+            String[] values = Helper.trimQuotes(matcher.group(2).split("\\s*,\\s*"));
+            AbstractTable table = getTable(tableName);
             if (table == null) {
                 return "ERROR: Table " + tableName + " does not exist";
             }
@@ -61,18 +67,16 @@ public class Engine {
     }
 
     public String select(String query) {
-        Pattern pattern = Pattern.compile("(?i)SELECT\\s+(.+?)\\s+FROM\\s+(\\w+)(?:\\s+WHERE\\s+(.+))?");
-        Matcher matcher = pattern.matcher(query);
+        Matcher matcher = SELECT_PATTERN.matcher(query);
         if (matcher.find()) {
             String columns = matcher.group(1);
             String tableName = matcher.group(2);
             String whereClause = matcher.group(3);
 
-            AbstractTable table = database.get(tableName);
+            AbstractTable table = getTable(tableName);
             if (table == null) {
                 return "ERROR: Table " + tableName + " does not exist";
             }
-
             Column[] selectedColumns = columns.equals("*") ? table.getColumns()
                     : Arrays.stream(columns.split("\\s*,\\s*"))
                             .map(Column::new)
@@ -85,18 +89,16 @@ public class Engine {
     }
 
     public String update(String query) {
-        Pattern pattern = Pattern.compile("(?i)UPDATE\\s+(\\w+)\\s+SET\\s+(.+?)(?:\\s+WHERE\\s+(.+))?$");
-        Matcher matcher = pattern.matcher(query);
+        Matcher matcher = UPDATE_PATTERN.matcher(query);
         if (matcher.find()) {
             String tableName = matcher.group(1);
             String updates = matcher.group(2);
             String conditions = matcher.group(3);
 
-            AbstractTable table = database.get(tableName);
+            AbstractTable table = getTable(tableName);
             if (table == null) {
                 return "ERROR: Table " + tableName + " does not exist";
             }
-
             Map<String, Object> updateMap = new HashMap<>();
             for (String update : updates.split("\\s*,\\s*")) {
                 String[] parts = update.split("\\s*=\\s*");
@@ -111,17 +113,15 @@ public class Engine {
     }
 
     public String delete(String query) {
-        Pattern pattern = Pattern.compile("(?i)DELETE\\s+FROM\\s+(\\w+)(?:\\s+WHERE\\s+(.+))?");
-        Matcher matcher = pattern.matcher(query);
+        Matcher matcher = DELETE_PATTERN.matcher(query);
         if (matcher.find()) {
             String tableName = matcher.group(1);
             String whereClause = matcher.group(2);
 
-            AbstractTable table = database.get(tableName);
+            AbstractTable table = getTable(tableName);
             if (table == null) {
                 return "ERROR: Table " + tableName + " does not exist";
             }
-
             List<String> conditions = parseWhereConditions(whereClause);
             int deletedRows = table.delete(conditions);
             return deletedRows + " row(s) deleted from " + tableName;
@@ -131,12 +131,9 @@ public class Engine {
 
     private List<String> parseWhereConditions(String whereClause) {
         if (whereClause == null || whereClause.trim().isEmpty()) {
-            return new ArrayList<>();
+            return Collections.emptyList();
         }
-
-        List<String> tokens = tokenizeWhereClause(whereClause);
-        List<String> postfix = convertToPostfix(tokens);
-        return postfix;
+        return convertToPostfix(tokenizeWhereClause(whereClause));
     }
 
     private List<String> tokenizeWhereClause(String whereClause) {
