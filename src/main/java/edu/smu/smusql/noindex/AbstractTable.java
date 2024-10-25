@@ -1,13 +1,16 @@
 package edu.smu.smusql.noindex;
 
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import edu.smu.smusql.*;;
+
+import edu.smu.smusql.Column;
+import edu.smu.smusql.Row;
+import edu.smu.smusql.exceptions.ColumnNotFoundException;;
 
 public abstract class AbstractTable {
     public Collection<Row> rows; 
-    public Column[] cols; 
+    public Column[] columns; 
     public String tableName;
     
     public AbstractTable(String name) {
@@ -22,12 +25,12 @@ public abstract class AbstractTable {
         this.rows = rows;
     }
 
-    public Column[] getCols() {
-        return cols;
+    public Column[] getColumns() {
+        return columns;
     }
 
-    public void setCols(Column[] cols) {
-        this.cols = cols;
+    public void setColumns(Column[] cols) {
+        this.columns = cols;
     }
 
     public String getTableName() {
@@ -45,5 +48,20 @@ public abstract class AbstractTable {
     public void removeRow(Row row) {
         this.rows.remove(row);
     }
+
+    public Column findColumn(String columnName) throws ColumnNotFoundException {
+        for (Column column : columns) {
+            if (column.getName().equals(columnName)) return column;
+        }
+        throw new ColumnNotFoundException();
+    }
+
+    public abstract void insert(String[] values);
+
+    public abstract List<Row> select(Column[] cols, List<String> conditions); 
+    
+    public abstract int update(Map<String, Object> updateMap, List<String> conditions);
+
+    public abstract int delete(List<String> conditions);
 }
 
