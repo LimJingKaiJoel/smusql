@@ -3,6 +3,7 @@ package edu.smu.smusql.noindex;
 import java.util.*;
 
 import edu.smu.smusql.*;
+import edu.smu.smusql.exceptions.ColumnNotFoundException;
 
 public class TableArrayList extends AbstractTable {
 
@@ -16,18 +17,18 @@ public class TableArrayList extends AbstractTable {
             cols[i] = new Column(colNames[i], i);
         }
 
-        super.setCols(cols);
+        super.setColumns(cols);
         super.setRows(new ArrayList<Row>());
 
     }
 
     public void insert(String[] values) {
         // INSERT INTO student VALUES (1, John, 30, 2.4, False)
-        if (values.length != super.cols.length) throw new IllegalArgumentException("Invalid number of input values entered: Expected "+ super.cols.length + " but got " + values.length);
+        if (values.length != super.columns.length) throw new IllegalArgumentException("Invalid number of input values entered: Expected "+ super.columns.length + " but got " + values.length);
         Row row = new Row(values.length);
         Object[] rowData = new Object[values.length];
         for (int i = 0; i < values.length; i++) {
-            char type = cols[i].getType(); 
+            char type = columns[i].getType(); 
             if (type == 'b') { // boolean
                 rowData[i] = Boolean.parseBoolean(values[i]);
             } else if (type == 'i') { // integer
@@ -42,49 +43,56 @@ public class TableArrayList extends AbstractTable {
         super.addRow(row);
     }
 
-    public List<Row> where(String condition) {
+    public List<Row> where(List<String> conditions) {
         // idk yet
         return new ArrayList<>();
     }
 
-    public void update(String col, String newVal, String condition) { // idk the format passed into this method 
+    public int update(Map<String, Object> updateMap, List<String> conditions) { // idk the format passed into this method 
         /*
          • Example: UPDATE student SET age = 25 WHERE id = 1
          • Example: UPDATE student SET deans_list = True WHERE gpa > 3.8 OR age = 201
-         */
+        */
+        // currently only assumed 1 col at a time lol
 
         // where processing 
-        List<Row> rows = where(condition);
+        List<Row> rows = where(conditions);
 
-        // find column number to update, assuming its already checked to be a valid column?? 
-        int colNo = -1; 
-        char colType = 0;
-        for (Column c : super.cols) {
-            if (c.getName().equals(col)) {
-                colNo = c.getNumber(); 
-                colType = c.getType();
-            }
-        }
-        if (colNo == -1) throw new IllegalArgumentException("Invalid column");
+        Map<Integer, Object> columnNoToUpdate = new HashMap<>();
 
-        // updating data 
-        for (Row r : rows) {
-            Object[] rowData = r.getDataRow();
-            if (colType == 'b') { // boolean
-                rowData[colNo] = Boolean.parseBoolean(newVal);
-            } else if (colType == 'i') { // integer
-                rowData[colNo] = Integer.parseInt(newVal);
-            } else if (colType == 'd') { // double
-                rowData[colNo] = Double.parseDouble(newVal);
-            } else { // string 
-                rowData[colNo] = newVal;
+        Set<String> columnNames = updateMap.keySet(); 
+        for (String columnName : columnNames) {
+            Column col;
+            try {
+                col = findColumn(columnName);
+            } catch (ColumnNotFoundException ex) {
+                System.out.println(ex.getMessage());
+                return 0;
             }
-            r.setDataRow(rowData);
+            columnNoToUpdate.put(col.getNumber(), updateMap.get(columnName));
+            // char colType = col.getType();
         }
 
+        for (Row row : rows) {
+            Object[] rowData = row.getDataRow();
+            for (Integer colNo : columnNoToUpdate.keySet()) {
+                rowData[colNo] = columnNoToUpdate.get(colNo);
+                // if (colType == 'b') { // boolean
+                //     rowData[colNo] = Boolean.parseBoolean(newVal);
+                // } else if (colType == 'i') { // integer
+                //     rowData[colNo] = Integer.parseInt(newVal);
+                // } else if (colType == 'd') { // double
+                //     rowData[colNo] = Double.parseDouble(newVal);
+                // } else { // string 
+                //     rowData[colNo] = newVal;
+                // }
+            }
+            row.setDataRow(rowData);
+        }
+        return rows.size(); 
     }
 
-    public void delete(String condition) { // idk the format passed into this method 
+    public int delete(List<String> conditions) { // idk the format passed into this method 
         /*
          • Example: DELETE FROM student WHERE gpa < 2.0
          • Example: DELETE FROM student WHERE gpa < 2.0 OR name = little_bobby_tables
@@ -92,21 +100,22 @@ public class TableArrayList extends AbstractTable {
 
 
         // where processing 
-        List<Row> rows = where(condition);
+        List<Row> rows = where(conditions);
 
         // idk if row needs an equal method that checks every value of its data to match??
         for (Row row : rows) {
             super.removeRow(row);
         }
+        return rows.size();
     }
 
-    public List<Row> select(String condition) { // idk the format passed into this method 
+    public List<Row> select(Column[] cols, List<String> conditions) { // idk the format passed into this method 
         /*
         • Example: SELECT * FROM student
         • Example: SELECT * FROM student WHERE gpa > 3.8
         • Example: SELECT * FROM student WHERE gpa > 3.8 AND age < 20
         • Example: SELECT * FROM student WHERE gpa > 3.8 OR age < 20
          */
-        return where(condition);
+        return where(conditions);
     }
 }
