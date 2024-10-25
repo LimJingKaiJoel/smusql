@@ -24,6 +24,8 @@ public class Main {
         // dbEngine.executeSQL("INSERT INTO users VALUES (1, 'Alice', 25, 'New York')");
         // dbEngine.executeSQL("INSERT INTO users VALUES (2, 'Bob', 30, 'Los Angeles')");
         // System.out.println(dbEngine.executeSQL("SELECT * FROM users"));
+        // System.out.println(dbEngine.executeSQL("SELECT name FROM users"));
+        // System.out.println(dbEngine.executeSQL("SELECT name, age FROM users WHERE id = 1"));
         // System.out.println(dbEngine.executeSQL("SELECT * FROM users WHERE id = 1"));
         // dbEngine.executeSQL("UPDATE users SET age = 31 WHERE city = 'Los Angeles' OR id = 1");
         // System.out.println(dbEngine.executeSQL("SELECT * FROM users"));

@@ -51,29 +51,26 @@ public abstract class AbstractTable {
         rows.add(new Row(columns.length, values));
     }
 
-    public String select(Column[] selectedColumns, List<String> conditions) {
-        StringBuilder result = new StringBuilder();
+    public List<Row> select(Column[] selectedColumns, List<String> conditions) {
+        List<Row> result = new ArrayList<>();
 
-        // Add header
-        for (Column column : selectedColumns) {
-            result.append(column.getName()).append("\t");
+        List<String> columnNames = new ArrayList<>();
+        for (Column column : columns) {
+            columnNames.add(column.getName());
         }
-        result.append("\n");
 
         // Add rows
         for (Row row : this.rows) {
             if (matchesConditions(row, conditions)) {
-                for (Column column : selectedColumns) {
-                    int index = Arrays.asList(columns).indexOf(column);
-                    String value = (index != -1 && index < row.getDataRow().length) ? (String) row.getDataRow()[index]
-                            : "NULL";
-                    result.append(value).append("\t");
+                Row newRow = new Row(selectedColumns.length);
+                for (int i = 0; i < selectedColumns.length; i++) {
+                    newRow.getDataRow()[i] = row.getDataRow()[columnNames.indexOf(selectedColumns[i].getName())];
                 }
-                result.append("\n");
+                result.add(newRow);
             }
         }
 
-        return result.toString();
+        return result;
     }
 
     public int update(Map<String, Object> updates, List<String> conditions) {

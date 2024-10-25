@@ -1,8 +1,5 @@
 package edu.smu.smusql;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class Row {
     public Object[] dataRow;
 
@@ -22,5 +19,4 @@ public class Row {
     public void setDataRow(Object[] dataRow) {
         this.dataRow = dataRow;
     }
-
 }

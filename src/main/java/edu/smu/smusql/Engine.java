@@ -12,9 +12,12 @@ import java.util.Stack;
 public class Engine {
     private Map<String, AbstractTable> database = new HashMap<>();
     private static final Pattern CREATE_PATTERN = Pattern.compile("(?i)CREATE\\s+TABLE\\s+(\\w+)\\s*\\((.+)\\)");
-    private static final Pattern INSERT_PATTERN = Pattern.compile("(?i)INSERT\\s+INTO\\s+(\\w+)\\s+VALUES\\s*\\((.+)\\)");
-    private static final Pattern SELECT_PATTERN = Pattern.compile("(?i)SELECT\\s+(.+?)\\s+FROM\\s+(\\w+)(?:\\s+WHERE\\s+(.+))?");
-    private static final Pattern UPDATE_PATTERN = Pattern.compile("(?i)UPDATE\\s+(\\w+)\\s+SET\\s+(.+?)(?:\\s+WHERE\\s+(.+))?$");
+    private static final Pattern INSERT_PATTERN = Pattern
+            .compile("(?i)INSERT\\s+INTO\\s+(\\w+)\\s+VALUES\\s*\\((.+)\\)");
+    private static final Pattern SELECT_PATTERN = Pattern
+            .compile("(?i)SELECT\\s+(.+?)\\s+FROM\\s+(\\w+)(?:\\s+WHERE\\s+(.+))?");
+    private static final Pattern UPDATE_PATTERN = Pattern
+            .compile("(?i)UPDATE\\s+(\\w+)\\s+SET\\s+(.+?)(?:\\s+WHERE\\s+(.+))?$");
     private static final Pattern DELETE_PATTERN = Pattern.compile("(?i)DELETE\\s+FROM\\s+(\\w+)(?:\\s+WHERE\\s+(.+))?");
 
     public String executeSQL(String query) {
@@ -86,7 +89,9 @@ public class Engine {
                             .toArray(Column[]::new);
 
             List<String> conditions = parseWhereConditions(whereClause);
-            return table.select(selectedColumns, conditions);
+            List<Row> result = table.select(selectedColumns, conditions);
+
+            return formatResult(result, selectedColumns);
         }
         return "ERROR: Invalid SELECT statement";
     }
@@ -221,5 +226,22 @@ public class Engine {
                 operator.equals(">=") || operator.equals("<=") || operator.equals("!="))
             return 3;
         return 0;
+    }
+
+    private String formatResult(List<Row> result, Column[] selectedColumns) {
+        StringBuilder resultString = new StringBuilder();
+
+        for (Column column : selectedColumns) {
+            resultString.append(column.getName()).append("\t");
+        }
+        resultString.append("\n");
+
+        for (Row row : result) {
+            for (Object value : row.getDataRow()) {
+                resultString.append(value).append("\t");
+            }
+            resultString.append("\n");
+        }
+        return resultString.toString();
     }
 }
