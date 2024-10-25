@@ -41,7 +41,7 @@ public class Engine {
         return table;
     }
 
-    protected AbstractTable createTable(String name, List<String> columns) {
+    protected AbstractTable createTable(String name, String[] columns) {
         // CHANGE THIS TABLE AS NEEDED
         return new DefaultTable(name, columns);
     }
@@ -51,7 +51,7 @@ public class Engine {
         if (matcher.find()) {
             String tableName = matcher.group(1);
             String[] columns = Helper.trimQuotes(matcher.group(2).split("\\s*,\\s*"));
-            database.put(tableName, createTable(tableName, Arrays.asList(columns)));
+            database.put(tableName, createTable(tableName, columns));
             return "Table " + tableName + " created with columns: " + String.join(", ", columns);
         }
         return "ERROR: Invalid CREATE statement";

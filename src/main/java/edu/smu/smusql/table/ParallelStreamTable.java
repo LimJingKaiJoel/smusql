@@ -8,7 +8,7 @@ import edu.smu.smusql.Column;
 import edu.smu.smusql.Row;
 
 public class ParallelStreamTable extends AbstractTable {
-    public ParallelStreamTable(String tableName, List<String> columns) {
+    public ParallelStreamTable(String tableName, String[] columns) {
         super(tableName, columns);
     }
 

@@ -15,9 +15,9 @@ public abstract class AbstractTable {
     public Column[] columns;
     public String tableName;
 
-    public AbstractTable(String name, List<String> columns) {
+    public AbstractTable(String name, String[] columns) {
         this.tableName = name;
-        this.columns = columns.stream()
+        this.columns = Arrays.stream(columns)
                 .map(Column::new)
                 .toArray(Column[]::new);
         this.rows = new ArrayList<>();
