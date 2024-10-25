@@ -80,7 +80,7 @@ public class TableArrayList extends AbstractTable {
             }
             mapping.get(val).add(row);
         }
-        Index index = new Index(mapping);
-        super.addIndex(col, index);
+        // Index index = new Index(mapping);
+        // super.addIndex(col, index);
     }
 }

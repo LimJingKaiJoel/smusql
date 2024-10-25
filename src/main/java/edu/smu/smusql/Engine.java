@@ -1,222 +1,247 @@
 package edu.smu.smusql;
 
 import java.util.*;
+import java.util.regex.*;
+import edu.smu.smusql.table.AbstractTable;
+import edu.smu.smusql.utils.Helper;
+import edu.smu.smusql.table.DefaultTable;
+// import edu.smu.smusql.table.ParallelStreamTable;
+
+import java.util.Stack;
 
 public class Engine {
-    private Map<String, Table> database = new HashMap<>();
+    private Map<String, AbstractTable> database = new HashMap<>();
+    private static final Pattern CREATE_PATTERN = Pattern.compile("(?i)CREATE\\s+TABLE\\s+(\\w+)\\s*\\((.+)\\)");
+    private static final Pattern INSERT_PATTERN = Pattern
+            .compile("(?i)INSERT\\s+INTO\\s+(\\w+)\\s+VALUES\\s*\\((.+)\\)");
+    private static final Pattern SELECT_PATTERN = Pattern
+            .compile("(?i)SELECT\\s+(.+?)\\s+FROM\\s+(\\w+)(?:\\s+WHERE\\s+(.+))?");
+    private static final Pattern UPDATE_PATTERN = Pattern
+            .compile("(?i)UPDATE\\s+(\\w+)\\s+SET\\s+(.+?)(?:\\s+WHERE\\s+(.+))?$");
+    private static final Pattern DELETE_PATTERN = Pattern.compile("(?i)DELETE\\s+FROM\\s+(\\w+)(?:\\s+WHERE\\s+(.+))?");
 
     public String executeSQL(String query) {
-        String[] tokens = query.trim().split("\\s+");
-        String command = tokens[0].toUpperCase();
-
-        switch (command) {
-            case "CREATE":
-                return create(tokens);
-            case "INSERT":
-                return insert(tokens);
-            case "SELECT":
-                return select(tokens);
-            case "UPDATE":
-                return update(tokens);
-            case "DELETE":
-                return delete(tokens);
-            default:
-                return "ERROR: Unknown command";
-        }
-    }
-
-    public String create(String[] tokens) {
-        if (tokens.length < 4 || !tokens[1].equalsIgnoreCase("TABLE")) {
-            return "ERROR: Invalid CREATE statement";
-        }
-        String tableName = tokens[2];
-        List<String> columns = new ArrayList<>();
-
-        if (!tokens[3].substring(0, 1).equals("(") || !tokens[3].substring(tokens[3].length() - 1).equals(")")) {
-            return "ERROR: Invalid CREATE statement";
-        }
-
-        String columnNames = tokens[3].substring(1, tokens[3].length() - 1);
-        String[] columnNamesArray = columnNames.split(",");
-        for (String columnName : columnNamesArray) {
-            columns.add(columnName);
-        }
-        database.put(tableName, new Table(columns));
-        return "Table " + tableName + " created with columns: " + String.join(", ", columns);
-    }
-
-    public String insert(String[] tokens) {
-        if (tokens.length < 5 || !tokens[1].equalsIgnoreCase("INTO") || !tokens[3].equalsIgnoreCase("VALUES")) {
-            return "ERROR: Invalid INSERT statement";
-        }
-        String tableName = tokens[2];
-        Table table = database.get(tableName);
-        if (table == null) {
-            return "ERROR: Table " + tableName + " does not exist";
-        }
-
-        if (!tokens[4].substring(0, 1).equals("(") || !tokens[4].substring(tokens[4].length() - 1).equals(")")) {
-            return "ERROR: Invalid INSERT statement";
-        }
-
-        String values = tokens[4].substring(1, tokens[4].length() - 1);
-        String[] valuesArray = values.split(",");
-        List<String> valuesList = new ArrayList<>();
-        for (String value : valuesArray) {
-            valuesList.add(value);
-        }
-        table.insert(valuesList);
-        return "1 row inserted into " + tableName;
-    }
-
-    public String select(String[] tokens) {
-        if (tokens.length < 4 || !tokens[2].equalsIgnoreCase("FROM")) {
-            return "ERROR: Invalid SELECT statement";
-        }
-        String tableName = tokens[3];
-
-        Table table = database.get(tableName);
-        if (table == null) {
-            return "ERROR: Table " + tableName + " does not exist";
-        }
-        List<String> columns = new ArrayList<>();
-        if (tokens[1].equals("*")) {
-            columns = table.getColumns();
+        if (CREATE_PATTERN.matcher(query).matches()) {
+            return create(query);
+        } else if (INSERT_PATTERN.matcher(query).matches()) {
+            return insert(query);
+        } else if (SELECT_PATTERN.matcher(query).matches()) {
+            return select(query);
+        } else if (UPDATE_PATTERN.matcher(query).matches()) {
+            return update(query);
+        } else if (DELETE_PATTERN.matcher(query).matches()) {
+            return delete(query);
         } else {
-            for (int i = 1; i < tokens.length && !tokens[i].equalsIgnoreCase("FROM"); i++) {
-                columns.add(tokens[i]);
-            }
+            return "ERROR: Unknown command";
         }
-        return table.select(columns);
     }
 
-    public String update(String[] tokens) {
-        // TODO: Handle properly
-        if (tokens.length < 5 || !tokens[2].equalsIgnoreCase("SET")) {
-            return "ERROR: Invalid UPDATE statement";
-        }
-        String tableName = tokens[1];
-        Table table = database.get(tableName);
-        if (table == null) {
-            return "ERROR: Table " + tableName + " does not exist";
-        }
-        String column = tokens[3];
-        String value = tokens[4];
-        int updatedRows = table.update(column, value);
-        return updatedRows + " row(s) updated in " + tableName;
+    private AbstractTable getTable(String tableName) {
+        AbstractTable table = database.get(tableName);
+        return table;
     }
 
-    public String delete(String[] tokens) {
-        // TODO: Handle properly
-        if (tokens.length < 3 || !tokens[1].equalsIgnoreCase("FROM")) {
-            return "ERROR: Invalid DELETE statement";
-        }
-        String tableName = tokens[2];
-        Table table = database.get(tableName);
-        if (table == null) {
-            return "ERROR: Table " + tableName + " does not exist";
-        }
-        int deletedRows = table.delete();
-        return deletedRows + " row(s) deleted from " + tableName;
+    protected AbstractTable createTable(String name, String[] columns) {
+        // CHANGE THIS TABLE AS NEEDED
+        return new DefaultTable(name, columns);
     }
 
-    private static class Table {
-        private List<String> columns;
-        private List<List<String>> rows;
-
-        public Table(List<String> columns) {
-            this.columns = columns;
-            this.rows = new ArrayList<>();
+    public String create(String query) {
+        Matcher matcher = CREATE_PATTERN.matcher(query);
+        if (matcher.find()) {
+            String tableName = matcher.group(1);
+            String[] columns = Helper.trimQuotes(matcher.group(2).split("\\s*,\\s*"));
+            database.put(tableName, createTable(tableName, columns));
+            return "Table " + tableName + " created with columns: " + String.join(", ", columns);
         }
+        return "ERROR: Invalid CREATE statement";
+    }
 
-        public void insert(List<String> values) {
-            rows.add(values);
+    public String insert(String query) {
+        Matcher matcher = INSERT_PATTERN.matcher(query);
+        if (matcher.find()) {
+            String tableName = matcher.group(1);
+            String[] values = Helper.trimQuotes(matcher.group(2).split("\\s*,\\s*"));
+            AbstractTable table = getTable(tableName);
+            if (table == null) {
+                return "ERROR: Table " + tableName + " does not exist";
+            }
+            table.insert(values);
+            return "1 row inserted into " + tableName;
         }
+        return "ERROR: Invalid INSERT statement";
+    }
 
-        public String select(List<String> selectedColumns) {
-            if (rows.isEmpty()) {
-                return "No data available.\n";
+    public String select(String query) {
+        Matcher matcher = SELECT_PATTERN.matcher(query);
+        if (matcher.find()) {
+            String columns = matcher.group(1);
+            String tableName = matcher.group(2);
+            String whereClause = matcher.group(3);
+
+            AbstractTable table = getTable(tableName);
+            if (table == null) {
+                return "ERROR: Table " + tableName + " does not exist";
+            }
+            Column[] selectedColumns = columns.equals("*") ? table.getColumns()
+                    : Arrays.stream(columns.split("\\s*,\\s*"))
+                            .map(Column::new)
+                            .toArray(Column[]::new);
+
+            List<String> conditions = parseWhereConditions(whereClause);
+            List<Row> result = table.select(selectedColumns, conditions);
+
+            return formatResult(result, selectedColumns);
+        }
+        return "ERROR: Invalid SELECT statement";
+    }
+
+    public String update(String query) {
+        Matcher matcher = UPDATE_PATTERN.matcher(query);
+        if (matcher.find()) {
+            String tableName = matcher.group(1);
+            String updates = matcher.group(2);
+            String conditions = matcher.group(3);
+
+            AbstractTable table = getTable(tableName);
+            if (table == null) {
+                return "ERROR: Table " + tableName + " does not exist";
+            }
+            Map<String, Object> updateMap = new HashMap<>();
+            for (String update : updates.split("\\s*,\\s*")) {
+                String[] parts = update.split("\\s*=\\s*");
+                updateMap.put(parts[0], Helper.trimQuotes(parts[1]));
             }
 
-            // Calculate column widths
-            Map<String, Integer> columnWidths = new HashMap<>();
-            for (String column : selectedColumns) {
-                columnWidths.put(column, column.length());
-            }
+            List<String> conditionsList = parseWhereConditions(conditions);
+            int updatedRows = table.update(updateMap, conditionsList);
+            return updatedRows + " row(s) updated in " + tableName;
+        }
+        return "ERROR: Invalid UPDATE statement";
+    }
 
-            for (List<String> row : rows) {
-                for (String column : selectedColumns) {
-                    int index = columns.indexOf(column);
-                    if (index != -1 && index < row.size()) {
-                        String value = row.get(index);
-                        columnWidths.put(column, Math.max(columnWidths.get(column), value.length()));
-                    }
+    public String delete(String query) {
+        Matcher matcher = DELETE_PATTERN.matcher(query);
+        if (matcher.find()) {
+            String tableName = matcher.group(1);
+            String whereClause = matcher.group(2);
+
+            AbstractTable table = getTable(tableName);
+            if (table == null) {
+                return "ERROR: Table " + tableName + " does not exist";
+            }
+            List<String> conditions = parseWhereConditions(whereClause);
+            int deletedRows = table.delete(conditions);
+            return deletedRows + " row(s) deleted from " + tableName;
+        }
+        return "ERROR: Invalid DELETE statement";
+    }
+
+    private List<String> parseWhereConditions(String whereClause) {
+        if (whereClause == null || whereClause.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+        return convertToPostfix(tokenizeWhereClause(whereClause));
+    }
+
+    private List<String> tokenizeWhereClause(String whereClause) {
+        List<String> tokens = new ArrayList<>();
+        StringBuilder currentToken = new StringBuilder();
+        boolean inQuotes = false;
+
+        for (char c : whereClause.toCharArray()) {
+            if ((c == '\'' || c == '"') && !inQuotes) {
+                inQuotes = true;
+                // currentToken.append(c);
+            } else if ((c == '\'' || c == '"') && inQuotes) {
+                inQuotes = false;
+                // currentToken.append(c);
+            } else if (!inQuotes && (c == '(' || c == ')' || c == ' ')) {
+                if (currentToken.length() > 0) {
+                    tokens.add(currentToken.toString());
+                    currentToken = new StringBuilder();
                 }
-            }
-
-            StringBuilder result = new StringBuilder();
-
-            // Print header
-            result.append("+");
-            for (String column : selectedColumns) {
-                result.append("-".repeat(columnWidths.get(column) + 2)).append("+");
-            }
-            result.append("\n");
-
-            result.append("|");
-            for (String column : selectedColumns) {
-                result.append(" ").append(String.format("%-" + columnWidths.get(column) + "s", column)).append(" |");
-            }
-            result.append("\n");
-
-            result.append("+");
-            for (String column : selectedColumns) {
-                result.append("-".repeat(columnWidths.get(column) + 2)).append("+");
-            }
-            result.append("\n");
-
-            // Print rows
-            for (List<String> row : rows) {
-                result.append("|");
-                for (String column : selectedColumns) {
-                    int index = columns.indexOf(column);
-                    String value = (index != -1 && index < row.size()) ? row.get(index) : "NULL";
-                    result.append(" ").append(String.format("%-" + columnWidths.get(column) + "s", value)).append(" |");
+                if (c != ' ') {
+                    tokens.add(String.valueOf(c));
                 }
-                result.append("\n");
+            } else {
+                currentToken.append(c);
             }
-
-            // Print footer
-            result.append("+");
-            for (String column : selectedColumns) {
-                result.append("-".repeat(columnWidths.get(column) + 2)).append("+");
-            }
-            result.append("\n");
-
-            return result.toString();
         }
 
-        public int update(String column, String value) {
-            int columnIndex = columns.indexOf(column);
-            if (columnIndex == -1) {
-                return 0;
-            }
-            int updatedRows = 0;
-            for (List<String> row : rows) {
-                row.set(columnIndex, value);
-                updatedRows++;
-            }
-            return updatedRows;
+        if (currentToken.length() > 0) {
+            tokens.add(currentToken.toString());
         }
 
-        public int delete() {
-            int deletedRows = rows.size();
-            rows.clear();
-            return deletedRows;
+        return tokens;
+    }
+
+    private List<String> convertToPostfix(List<String> tokens) {
+        List<String> output = new ArrayList<>();
+        Stack<String> operators = new Stack<>();
+
+        for (String token : tokens) {
+            if (isOperand(token)) {
+                output.add(token);
+            } else if (token.equals("(")) {
+                operators.push(token);
+            } else if (token.equals(")")) {
+                while (!operators.isEmpty() && !operators.peek().equals("(")) {
+                    output.add(operators.pop());
+                }
+                if (!operators.isEmpty() && operators.peek().equals("(")) {
+                    operators.pop();
+                }
+            } else if (isOperator(token)) {
+                while (!operators.isEmpty() && precedence(operators.peek()) >= precedence(token)) {
+                    output.add(operators.pop());
+                }
+                operators.push(token);
+            }
         }
 
-        public List<String> getColumns() {
-            return columns;
+        while (!operators.isEmpty()) {
+            output.add(operators.pop());
         }
+
+        return output;
+    }
+
+    private boolean isOperand(String token) {
+        return !isOperator(token) && !token.equals("(") && !token.equals(")");
+    }
+
+    private boolean isOperator(String token) {
+        return token.equalsIgnoreCase("AND") || token.equalsIgnoreCase("OR") ||
+                token.equals("=") || token.equals(">") || token.equals("<") ||
+                token.equals(">=") || token.equals("<=") || token.equals("!=");
+    }
+
+    private int precedence(String operator) {
+        if (operator.equalsIgnoreCase("AND"))
+            return 2;
+        if (operator.equalsIgnoreCase("OR"))
+            return 1;
+        if (operator.equals("=") || operator.equals(">") || operator.equals("<") ||
+                operator.equals(">=") || operator.equals("<=") || operator.equals("!="))
+            return 3;
+        return 0;
+    }
+
+    private String formatResult(List<Row> result, Column[] selectedColumns) {
+        StringBuilder resultString = new StringBuilder();
+
+        for (Column column : selectedColumns) {
+            resultString.append(column.getName()).append("\t");
+        }
+        resultString.append("\n");
+
+        for (Row row : result) {
+            for (Object value : row.getDataRow()) {
+                resultString.append(value).append("\t");
+            }
+            resultString.append("\n");
+        }
+        return resultString.toString();
     }
 }

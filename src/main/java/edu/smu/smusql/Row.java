@@ -1,13 +1,15 @@
 package edu.smu.smusql;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class Row {
     public Object[] dataRow;
 
     public Row(int colSize) {
-        dataRow = new Object[colSize];
+        this.dataRow = new Object[colSize];
+    }
+
+    public Row(int colSize, Object[] dataRow) {
+        this.dataRow = new Object[colSize];
+        System.arraycopy(dataRow, 0, this.dataRow, 0, colSize);
     }
 
     public Object[] getDataRow() {
@@ -17,5 +19,4 @@ public class Row {
     public void setDataRow(Object[] dataRow) {
         this.dataRow = dataRow;
     }
-
 }
