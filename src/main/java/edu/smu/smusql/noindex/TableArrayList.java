@@ -14,7 +14,8 @@ public class TableArrayList extends AbstractTable {
         Column[] cols = new Column[colNames.length];
 
         for (int i = 0; i < cols.length; i++) {
-            cols[i] = new Column(colNames[i], i);
+            cols[i] = new Column(colNames[i]);
+            columnNoMap.put(colNames[i], i);
         }
 
         super.setColumns(cols);
@@ -58,19 +59,17 @@ public class TableArrayList extends AbstractTable {
         // where processing 
         List<Row> rows = where(conditions);
 
-        Map<Integer, Object> columnNoToUpdate = new HashMap<>();
+        Map<Integer, Object> columnNoToUpdate = new HashMap<>(); // column no, new data
 
         Set<String> columnNames = updateMap.keySet(); 
         for (String columnName : columnNames) {
             Column col;
-            try {
-                col = findColumn(columnName);
-            } catch (ColumnNotFoundException ex) {
-                System.out.println(ex.getMessage());
+            if (columnNoMap.get(columnName) != null) {
+                columnNoToUpdate.put(columnNoMap.get(columnName), updateMap.get(columnName));
+            } else {
+                System.out.println(columnName + " does not exist in the table.");
                 return 0;
             }
-            columnNoToUpdate.put(col.getNumber(), updateMap.get(columnName));
-            // char colType = col.getType();
         }
 
         for (Row row : rows) {

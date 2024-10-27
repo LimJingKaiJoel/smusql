@@ -6,12 +6,13 @@ import java.util.Map;
 
 import edu.smu.smusql.Column;
 import edu.smu.smusql.Row;
-import edu.smu.smusql.exceptions.ColumnNotFoundException;;
+import edu.smu.smusql.exceptions.ColumnNotFoundException;
 
 public abstract class AbstractTable {
-    public Collection<Row> rows; 
-    public Column[] columns; 
-    public String tableName;
+    protected Collection<Row> rows; 
+    protected Column[] columns; 
+    protected String tableName;
+    protected Map<String, Integer> columnNoMap; 
     
     public AbstractTable(String name) {
         this.tableName = name;
@@ -47,13 +48,6 @@ public abstract class AbstractTable {
 
     public void removeRow(Row row) {
         this.rows.remove(row);
-    }
-
-    public Column findColumn(String columnName) throws ColumnNotFoundException {
-        for (Column column : columns) {
-            if (column.getName().equals(columnName)) return column;
-        }
-        throw new ColumnNotFoundException();
     }
 
     public abstract void insert(String[] values);
