@@ -12,6 +12,7 @@ public class TableArrayList extends AbstractTable {
         // CREATE TABLE student (id, name, age, gpa, deans_list)
         super(tableName);
         Column[] cols = new Column[colNames.length];
+        columnNoMap = new HashMap<>();
 
         for (int i = 0; i < cols.length; i++) {
             cols[i] = new Column(colNames[i]);
@@ -44,7 +45,63 @@ public class TableArrayList extends AbstractTable {
         super.addRow(row);
     }
 
+    private List<String> infixToPostfix(List<String> infixTokens) {
+        List<String> postfix = new ArrayList<>();
+        Stack<String> stack = new Stack<>();
+    
+        for (String token : infixTokens) {
+            if (isOperator(token)) {
+                while (!stack.isEmpty() && isOperator(stack.peek()) &&
+                        precedence(stack.peek()) >= precedence(token)) {
+                    postfix.add(stack.pop());
+                }
+                stack.push(token);
+            } else if (token.equals("(")) {
+                stack.push(token);
+            } else if (token.equals(")")) {
+                while (!stack.isEmpty() && !stack.peek().equals("(")) {
+                    postfix.add(stack.pop());
+                }
+                if (stack.isEmpty() || !stack.peek().equals("(")) {
+                    throw new IllegalArgumentException("Mismatched parentheses");
+                }
+                stack.pop(); // Remove '('
+            } else {
+                // Operand
+                postfix.add(token);
+            }
+        }
+    
+        while (!stack.isEmpty()) {
+            if (stack.peek().equals("(") || stack.peek().equals(")")) {
+                throw new IllegalArgumentException("Mismatched parentheses");
+            }
+            postfix.add(stack.pop());
+        }
+    
+        return postfix;
+    }
+    
+    private int precedence(String token) {
+        if (isComparisonOperator(token)) {
+            return 3;
+        } else if (token.equalsIgnoreCase("AND")) {
+            return 2;
+        } else if (token.equalsIgnoreCase("OR")) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+    // NOTE: for complex queries, i cant seem to figure out why it doesnt work, it's not evaluating the final condition correctly :( 
+    // will debug when i have time
     public List<Row> where(List<String> conditions) {
+        for (String condition : conditions) {
+            System.out.print("Condition: " + condition + " |");
+        } 
+        System.out.println();
+
         List<Row> result = new ArrayList<>();
         for (Row row : super.getRows()) {
             if (evaluateConditions(conditions, row)) {
@@ -55,39 +112,68 @@ public class TableArrayList extends AbstractTable {
     }
     
     private boolean evaluateConditions(List<String> conditions, Row row) {
+        List<String> postfixTokens = infixToPostfix(conditions);
         Stack<Object> stack = new Stack<>();
-        for (String token : conditions) {
+    
+        for (String token : postfixTokens) {
+            System.out.println("Processing token: " + token);
+            System.out.println("Stack before: " + stack);
+    
             if (isOperator(token)) {
                 if (isLogicalOperator(token)) {
+                    if (stack.size() < 2) throw new IllegalStateException("Not enough operands for logical operator.");
+                    
                     boolean right = (boolean) stack.pop();
                     boolean left = (boolean) stack.pop();
-                    boolean result;
-                    if (token.equalsIgnoreCase("AND")) {
-                        result = left && right;
-                    } else if (token.equalsIgnoreCase("OR")) {
-                        result = left || right;
-                    } else {
-                        throw new IllegalArgumentException("Unknown logical operator: " + token);
-                    }
-                    stack.push(result);
+                    
+                    stack.push(token.equalsIgnoreCase("AND") ? left && right : left || right);
                 } else if (isComparisonOperator(token)) {
+                    if (stack.size() < 2) throw new IllegalStateException("Not enough operands for comparison operator.");
+    
                     Object rightOperand = stack.pop();
                     Object leftOperand = stack.pop();
+    
                     Object leftValue = getOperandValue(leftOperand, row);
                     Object rightValue = getOperandValue(rightOperand, row);
+    
                     boolean result = compareValues(leftValue, rightValue, token);
                     stack.push(result);
-                } else {
-                    throw new IllegalArgumentException("Unknown operator: " + token);
                 }
             } else {
-                stack.push(token);
+                // Push column name or literal directly onto the stack
+                Object value = parseLiteral(token);
+                stack.push(value);
             }
+    
+            System.out.println("Stack after: " + stack);
         }
+    
         if (stack.size() != 1) {
             throw new IllegalStateException("Invalid condition expression");
         }
         return (boolean) stack.pop();
+    }
+    
+    private Object parseLiteral(String literal) {
+        // boolean
+        if (literal.equalsIgnoreCase("true")) {
+            return true;
+        }
+        if (literal.equalsIgnoreCase("false")) {
+            return false;
+        }
+    
+        // number
+        try {
+            if (literal.contains(".")) {
+                return Double.parseDouble(literal);
+            } else {
+                return Integer.parseInt(literal);
+            }
+        } catch (NumberFormatException e) {
+            // string (strings are always enclosed in single quotes)
+            return literal.replace("'", "");
+        }
     }
     
     private boolean isOperator(String token) {
@@ -104,36 +190,16 @@ public class TableArrayList extends AbstractTable {
     }
     
     private Object getOperandValue(Object operand, Row row) {
-        String operandStr = (String) operand;
-        if (super.columnNoMap.containsKey(operandStr)) {
-            int colIndex = super.columnNoMap.get(operandStr);
+        String operandStr = operand.toString();
+    
+        // If the operand is a column name, fetch the value from the row
+        if (columnNoMap.containsKey(operandStr)) {
+            int colIndex = columnNoMap.get(operandStr);
             return row.getDataRow()[colIndex];
         } else {
+            // If it's a literal value, return it as-is or parse it
             return parseLiteral(operandStr);
         }
-    }
-    
-    private Object parseLiteral(String operandStr) {
-        operandStr = operandStr.trim();
-        if ((operandStr.startsWith("'") && operandStr.endsWith("'")) ||
-            (operandStr.startsWith("\"") && operandStr.endsWith("\""))) {
-            operandStr = operandStr.substring(1, operandStr.length() - 1);
-            return operandStr;
-        }
-        try {
-            return Integer.parseInt(operandStr);
-        } catch (NumberFormatException e) {
-            // Not an integer
-        }
-        try {
-            return Double.parseDouble(operandStr);
-        } catch (NumberFormatException e) {
-            // Not a double
-        }
-        if (operandStr.equalsIgnoreCase("true") || operandStr.equalsIgnoreCase("false")) {
-            return Boolean.parseBoolean(operandStr);
-        }
-        return operandStr;
     }
     
     private boolean compareValues(Object leftValue, Object rightValue, String operator) {

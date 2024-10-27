@@ -137,7 +137,7 @@ public class Engine {
         return "ERROR: Invalid DELETE statement";
     }
 
-    private List<String> parseWhereConditions(String whereClause) {
+    public List<String> parseWhereConditions(String whereClause) {
         if (whereClause == null || whereClause.trim().isEmpty()) {
             return Collections.emptyList();
         }
