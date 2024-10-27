@@ -45,8 +45,151 @@ public class TableArrayList extends AbstractTable {
     }
 
     public List<Row> where(List<String> conditions) {
-        // idk yet
-        return new ArrayList<>();
+        List<Row> result = new ArrayList<>();
+        for (Row row : super.getRows()) {
+            if (evaluateConditions(conditions, row)) {
+                result.add(row);
+            }
+        }
+        return result;
+    }
+    
+    private boolean evaluateConditions(List<String> conditions, Row row) {
+        Stack<Object> stack = new Stack<>();
+        for (String token : conditions) {
+            if (isOperator(token)) {
+                if (isLogicalOperator(token)) {
+                    boolean right = (boolean) stack.pop();
+                    boolean left = (boolean) stack.pop();
+                    boolean result;
+                    if (token.equalsIgnoreCase("AND")) {
+                        result = left && right;
+                    } else if (token.equalsIgnoreCase("OR")) {
+                        result = left || right;
+                    } else {
+                        throw new IllegalArgumentException("Unknown logical operator: " + token);
+                    }
+                    stack.push(result);
+                } else if (isComparisonOperator(token)) {
+                    Object rightOperand = stack.pop();
+                    Object leftOperand = stack.pop();
+                    Object leftValue = getOperandValue(leftOperand, row);
+                    Object rightValue = getOperandValue(rightOperand, row);
+                    boolean result = compareValues(leftValue, rightValue, token);
+                    stack.push(result);
+                } else {
+                    throw new IllegalArgumentException("Unknown operator: " + token);
+                }
+            } else {
+                stack.push(token);
+            }
+        }
+        if (stack.size() != 1) {
+            throw new IllegalStateException("Invalid condition expression");
+        }
+        return (boolean) stack.pop();
+    }
+    
+    private boolean isOperator(String token) {
+        return isLogicalOperator(token) || isComparisonOperator(token);
+    }
+    
+    private boolean isLogicalOperator(String token) {
+        return token.equalsIgnoreCase("AND") || token.equalsIgnoreCase("OR");
+    }
+    
+    private boolean isComparisonOperator(String token) {
+        return token.equals("=") || token.equals("!=") || token.equals(">") || token.equals("<")
+                || token.equals(">=") || token.equals("<=");
+    }
+    
+    private Object getOperandValue(Object operand, Row row) {
+        String operandStr = (String) operand;
+        if (super.columnNoMap.containsKey(operandStr)) {
+            int colIndex = super.columnNoMap.get(operandStr);
+            return row.getDataRow()[colIndex];
+        } else {
+            return parseLiteral(operandStr);
+        }
+    }
+    
+    private Object parseLiteral(String operandStr) {
+        operandStr = operandStr.trim();
+        if ((operandStr.startsWith("'") && operandStr.endsWith("'")) ||
+            (operandStr.startsWith("\"") && operandStr.endsWith("\""))) {
+            operandStr = operandStr.substring(1, operandStr.length() - 1);
+            return operandStr;
+        }
+        try {
+            return Integer.parseInt(operandStr);
+        } catch (NumberFormatException e) {
+            // Not an integer
+        }
+        try {
+            return Double.parseDouble(operandStr);
+        } catch (NumberFormatException e) {
+            // Not a double
+        }
+        if (operandStr.equalsIgnoreCase("true") || operandStr.equalsIgnoreCase("false")) {
+            return Boolean.parseBoolean(operandStr);
+        }
+        return operandStr;
+    }
+    
+    private boolean compareValues(Object leftValue, Object rightValue, String operator) {
+        if (leftValue == null || rightValue == null) {
+            return false;
+        }
+        if (leftValue instanceof Number && rightValue instanceof Number) {
+            double leftNum = ((Number) leftValue).doubleValue();
+            double rightNum = ((Number) rightValue).doubleValue();
+            switch (operator) {
+                case "=":
+                    return leftNum == rightNum;
+                case "!=":
+                    return leftNum != rightNum;
+                case ">":
+                    return leftNum > rightNum;
+                case "<":
+                    return leftNum < rightNum;
+                case ">=":
+                    return leftNum >= rightNum;
+                case "<=":
+                    return leftNum <= rightNum;
+                default:
+                    throw new IllegalArgumentException("Unknown operator: " + operator);
+            }
+        } else if (leftValue instanceof Boolean && rightValue instanceof Boolean) {
+            boolean leftBool = (Boolean) leftValue;
+            boolean rightBool = (Boolean) rightValue;
+            switch (operator) {
+                case "=":
+                    return leftBool == rightBool;
+                case "!=":
+                    return leftBool != rightBool;
+                default:
+                    throw new IllegalArgumentException("Operator " + operator + " not supported for Booleans");
+            }
+        } else {
+            String leftStr = leftValue.toString();
+            String rightStr = rightValue.toString();
+            switch (operator) {
+                case "=":
+                    return leftStr.equals(rightStr);
+                case "!=":
+                    return !leftStr.equals(rightStr);
+                case ">":
+                    return leftStr.compareTo(rightStr) > 0;
+                case "<":
+                    return leftStr.compareTo(rightStr) < 0;
+                case ">=":
+                    return leftStr.compareTo(rightStr) >= 0;
+                case "<=":
+                    return leftStr.compareTo(rightStr) <= 0;
+                default:
+                    throw new IllegalArgumentException("Unknown operator: " + operator);
+            }
+        }
     }
 
     public int update(Map<String, Object> updateMap, List<String> conditions) { // idk the format passed into this method 
