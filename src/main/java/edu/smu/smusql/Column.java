@@ -5,14 +5,10 @@ public class Column {
     private char type; 
 
     public Column(String name) {
-        this.type = 's';
-    }
-
-    public Column(String name, int id) {
         this.name = name;
         this.type = 's';
     }
-
+    
     public String getName() {
         return name;
     }

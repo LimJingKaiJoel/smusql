@@ -1,19 +1,21 @@
 package edu.smu.smusql.index;
 
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import edu.smu.smusql.*;;
+
+import edu.smu.smusql.Column;
+import edu.smu.smusql.Row;
 
 public abstract class AbstractTable {
-    public Collection<Row> rows; 
-    public Column[] cols; 
-    public String tableName;
+    protected Collection<Row> rows; 
+    protected Column[] columns; 
+    protected String tableName;
+    protected Map<String, Integer> columnNoMap; 
     public Map<Column, Index> indexes; // column and index 
     
     public AbstractTable(String name) {
         this.tableName = name;
-        this.indexes = new HashMap<>();
     }
 
     public Collection<Row> getRows() {
@@ -24,12 +26,12 @@ public abstract class AbstractTable {
         this.rows = rows;
     }
 
-    public Column[] getCols() {
-        return cols;
+    public Column[] getColumns() {
+        return columns;
     }
 
-    public void setCols(Column[] cols) {
-        this.cols = cols;
+    public void setColumns(Column[] cols) {
+        this.columns = cols;
     }
 
     public String getTableName() {
@@ -44,8 +46,20 @@ public abstract class AbstractTable {
         this.rows.add(row);
     }
 
+    public void removeRow(Row row) {
+        this.rows.remove(row);
+    }
+
     public void addIndex(Column c, Index i) {
         indexes.put(c, i);
     }
+
+    public abstract void insert(String[] values);
+
+    public abstract String select(Column[] cols, List<String> conditions); 
+    
+    public abstract int update(Map<String, Object> updateMap, List<String> conditions);
+
+    public abstract int delete(List<String> conditions);
 }
 

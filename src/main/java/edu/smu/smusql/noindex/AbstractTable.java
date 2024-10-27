@@ -52,7 +52,7 @@ public abstract class AbstractTable {
 
     public abstract void insert(String[] values);
 
-    public abstract List<Row> select(Column[] cols, List<String> conditions); 
+    public abstract String select(Column[] cols, List<String> conditions); 
     
     public abstract int update(Map<String, Object> updateMap, List<String> conditions);
 

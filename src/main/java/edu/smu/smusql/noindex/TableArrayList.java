@@ -8,10 +8,11 @@ import edu.smu.smusql.exceptions.ColumnNotFoundException;
 public class TableArrayList extends AbstractTable {
 
     // create a table with the fixed columns and empty arraylist of rows 
-    public TableArrayList(String[] colNames, String tableName) {
+    public TableArrayList(String tableName, String[] colNames) {
         // CREATE TABLE student (id, name, age, gpa, deans_list)
         super(tableName);
         Column[] cols = new Column[colNames.length];
+        columnNoMap = new HashMap<>();
 
         for (int i = 0; i < cols.length; i++) {
             cols[i] = new Column(colNames[i]);
@@ -20,7 +21,6 @@ public class TableArrayList extends AbstractTable {
 
         super.setColumns(cols);
         super.setRows(new ArrayList<Row>());
-
     }
 
     public void insert(String[] values) {
@@ -44,9 +44,219 @@ public class TableArrayList extends AbstractTable {
         super.addRow(row);
     }
 
+    // private List<String> infixToPostfix(List<String> infixTokens) {
+    //     List<String> postfix = new ArrayList<>();
+    //     Stack<String> stack = new Stack<>();
+    
+    //     for (String token : infixTokens) {
+    //         if (isOperator(token)) {
+    //             while (!stack.isEmpty() && isOperator(stack.peek()) &&
+    //                     precedence(stack.peek()) >= precedence(token)) {
+    //                 postfix.add(stack.pop());
+    //             }
+    //             stack.push(token);
+    //         } else if (token.equals("(")) {
+    //             stack.push(token);
+    //         } else if (token.equals(")")) {
+    //             while (!stack.isEmpty() && !stack.peek().equals("(")) {
+    //                 postfix.add(stack.pop());
+    //             }
+    //             if (stack.isEmpty() || !stack.peek().equals("(")) {
+    //                 throw new IllegalArgumentException("Mismatched parentheses");
+    //             }
+    //             stack.pop(); // Remove '('
+    //         } else {
+    //             // Operand
+    //             postfix.add(token);
+    //         }
+    //     }
+    
+    //     while (!stack.isEmpty()) {
+    //         if (stack.peek().equals("(") || stack.peek().equals(")")) {
+    //             throw new IllegalArgumentException("Mismatched parentheses");
+    //         }
+    //         postfix.add(stack.pop());
+    //     }
+    
+    //     return postfix;
+    // }
+    
+    // private int precedence(String token) {
+    //     if (isComparisonOperator(token)) {
+    //         return 3;
+    //     } else if (token.equalsIgnoreCase("AND")) {
+    //         return 2;
+    //     } else if (token.equalsIgnoreCase("OR")) {
+    //         return 1;
+    //     } else {
+    //         return 0;
+    //     }
+    // }
+
     public List<Row> where(List<String> conditions) {
-        // idk yet
-        return new ArrayList<>();
+// for (String condition : conditions) {
+//     System.out.print("Condition: " + condition + " |");
+// } 
+// System.out.println();
+
+        List<Row> result = new ArrayList<>();
+        for (Row row : super.getRows()) {
+            if (evaluateConditions(conditions, row)) {
+                result.add(row);
+            }
+        }
+        return result;
+    }
+    
+    private boolean evaluateConditions(List<String> conditions, Row row) {
+        // List<String> postfixTokens = infixToPostfix(conditions);
+        List<String> postfixTokens = conditions;
+        Stack<Object> stack = new Stack<>();
+// System.out.println(Arrays.toString(row.dataRow));
+    
+        for (String token : postfixTokens) {
+// System.out.println("Processing token: " + token);
+// System.out.println("Stack before: " + stack);
+    
+            if (isOperator(token)) {
+                if (isLogicalOperator(token)) {
+                    if (stack.size() < 2) throw new IllegalStateException("Not enough operands for logical operator.");
+                    
+                    boolean right = (boolean) stack.pop();
+                    boolean left = (boolean) stack.pop();
+                    
+                    stack.push(token.equalsIgnoreCase("AND") ? left && right : left || right);
+                } else if (isComparisonOperator(token)) {
+                    if (stack.size() < 2) throw new IllegalStateException("Not enough operands for comparison operator.");
+    
+                    Object rightOperand = stack.pop();
+                    Object leftOperand = stack.pop();
+    
+                    Object leftValue = getOperandValue(leftOperand, row);
+                    Object rightValue = getOperandValue(rightOperand, row);
+    
+                    boolean result = compareValues(leftValue, rightValue, token);
+                    stack.push(result);
+                }
+            } else {
+                // Push column name or literal directly onto the stack
+                Object value = parseLiteral(token);
+                stack.push(value);
+            }
+    
+// System.out.println("Stack after: " + stack);
+        }
+    
+        if (stack.size() != 1) {
+            throw new IllegalStateException("Invalid condition expression");
+        }
+        Object element = stack.pop();
+// System.out.println(element.toString());
+        return (boolean) element;
+    }
+    
+    private Object parseLiteral(String literal) {
+        // boolean
+        if (literal.equalsIgnoreCase("true")) {
+            return true;
+        }
+        if (literal.equalsIgnoreCase("false")) {
+            return false;
+        }
+    
+        // number
+        try {
+            if (literal.contains(".")) {
+                return Double.parseDouble(literal);
+            } else {
+                return Integer.parseInt(literal);
+            }
+        } catch (NumberFormatException e) {
+            // string (strings are always enclosed in single quotes)
+            return literal.replace("'", "");
+        }
+    }
+    
+    private boolean isOperator(String token) {
+        return isLogicalOperator(token) || isComparisonOperator(token);
+    }
+    
+    private boolean isLogicalOperator(String token) {
+        return token.equalsIgnoreCase("AND") || token.equalsIgnoreCase("OR");
+    }
+    
+    private boolean isComparisonOperator(String token) {
+        return token.equals("=") || token.equals("!=") || token.equals(">") || token.equals("<")
+                || token.equals(">=") || token.equals("<=");
+    }
+    
+    private Object getOperandValue(Object operand, Row row) {
+        String operandStr = operand.toString();
+    
+        // If the operand is a column name, fetch the value from the row
+        if (columnNoMap.containsKey(operandStr)) {
+            int colIndex = columnNoMap.get(operandStr);
+            return row.getDataRow()[colIndex];
+        } else {
+            // If it's a literal value, return it as-is or parse it
+            return parseLiteral(operandStr);
+        }
+    }
+    
+    private boolean compareValues(Object leftValue, Object rightValue, String operator) {
+        if (leftValue == null || rightValue == null) {
+            return false;
+        }
+        if (leftValue instanceof Number && rightValue instanceof Number) {
+            double leftNum = ((Number) leftValue).doubleValue();
+            double rightNum = ((Number) rightValue).doubleValue();
+            switch (operator) {
+                case "=":
+                    return leftNum == rightNum;
+                case "!=":
+                    return leftNum != rightNum;
+                case ">":
+                    return leftNum > rightNum;
+                case "<":
+                    return leftNum < rightNum;
+                case ">=":
+                    return leftNum >= rightNum;
+                case "<=":
+                    return leftNum <= rightNum;
+                default:
+                    throw new IllegalArgumentException("Unknown operator: " + operator);
+            }
+        } else if (leftValue instanceof Boolean && rightValue instanceof Boolean) {
+            boolean leftBool = (Boolean) leftValue;
+            boolean rightBool = (Boolean) rightValue;
+            switch (operator) {
+                case "=":
+                    return leftBool == rightBool;
+                case "!=":
+                    return leftBool != rightBool;
+                default:
+                    throw new IllegalArgumentException("Operator " + operator + " not supported for Booleans");
+            }
+        } else {
+            String leftStr = leftValue.toString();
+            String rightStr = rightValue.toString();
+            switch (operator) {
+                case "=":
+                    return leftStr.equals(rightStr);
+                case "!=":
+                    return !leftStr.equals(rightStr);
+                case ">":
+                    return leftStr.compareTo(rightStr) > 0;
+                case "<":
+                    return leftStr.compareTo(rightStr) < 0;
+                case ">=":
+                    return leftStr.compareTo(rightStr) >= 0;
+                case "<=":
+                    return leftStr.compareTo(rightStr) <= 0;
+                default:
+                    throw new IllegalArgumentException("Unknown operator: " + operator);
+            }
+        }
     }
 
     public int update(Map<String, Object> updateMap, List<String> conditions) { // idk the format passed into this method 
@@ -108,13 +318,40 @@ public class TableArrayList extends AbstractTable {
         return rows.size();
     }
 
-    public List<Row> select(Column[] cols, List<String> conditions) { // idk the format passed into this method 
+    public String select(Column[] cols, List<String> conditions) { // idk the format passed into this method 
         /*
         • Example: SELECT * FROM student
         • Example: SELECT * FROM student WHERE gpa > 3.8
         • Example: SELECT * FROM student WHERE gpa > 3.8 AND age < 20
         • Example: SELECT * FROM student WHERE gpa > 3.8 OR age < 20
          */
-        return where(conditions);
+        // List<Row> result = new ArrayList<>(); 
+        StringBuilder result = new StringBuilder();
+        List<Row> selectedRows;
+        if (conditions.size() == 0) {
+            selectedRows = new ArrayList<>(this.rows);
+        } else {
+            selectedRows = where(conditions);
+        }
+        // String[] headers = new String[cols.length];
+        Integer[] colIndex = new Integer[cols.length];
+        for (int i = 0; i < cols.length; i++) {
+            result.append(cols[i].getName() + '\t');
+            // headers[i] = cols[i].getName();
+            colIndex[i] = columnNoMap.get(cols[i].getName());
+        }
+        result.append('\n');
+        // Row header = new Row(cols.length, headers); 
+        // result.add(header);
+        for (Row row : selectedRows) {
+            // Object[] newRowData = new Object[cols.length];
+            for (int j = 0; j < colIndex.length; j++) {
+                result.append(row.getDataRow()[colIndex[j]].toString() + '\t');
+            }
+            // Row r = new Row(cols.length, newRowData);
+            // result.add(r);
+            result.append('\n');
+        }
+        return result.toString();
     }
 }
