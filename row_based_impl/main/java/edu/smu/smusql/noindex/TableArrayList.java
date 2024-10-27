@@ -1,4 +1,4 @@
-package edu.smu.smusql.index;
+package edu.smu.smusql.noindex;
 
 import java.util.*;
 
@@ -25,9 +25,6 @@ public class TableArrayList extends AbstractTable {
     public void insert(String[] values) {
         // INSERT INTO student VALUES (1, John, 30, 2.4, False)
         if (values.length != super.columns.length) throw new IllegalArgumentException("Invalid number of input values entered: Expected "+ super.columns.length + " but got " + values.length);
-        
-        // need insert into index also
-        
         Row row = new Row(values.length);
         Object[] rowData = new Object[values.length];
         for (int i = 0; i < values.length; i++) {
@@ -46,13 +43,11 @@ public class TableArrayList extends AbstractTable {
         super.addRow(row);
     }
 
-    // NOTE: for complex queries, i cant seem to figure out why it doesnt work, it's not evaluating the final condition correctly :( 
-    // will debug when i have time
     public List<Row> where(List<String> conditions) {
-        for (String condition : conditions) {
-            System.out.print("Condition: " + condition + " |");
-        } 
-        System.out.println();
+// for (String condition : conditions) {
+//     System.out.print("Condition: " + condition + " |");
+// } 
+// System.out.println();
 
         List<Row> result = new ArrayList<>();
         for (Row row : super.getRows()) {
@@ -64,14 +59,13 @@ public class TableArrayList extends AbstractTable {
     }
     
     private boolean evaluateConditions(List<String> conditions, Row row) {
-        // List<String> postfixTokens = infixToPostfix(conditions);
         List<String> postfixTokens = conditions;
         Stack<Object> stack = new Stack<>();
-        System.out.println(Arrays.toString(row.dataRow));
+// System.out.println(Arrays.toString(row.dataRow));
     
         for (String token : postfixTokens) {
-            System.out.println("Processing token: " + token);
-            System.out.println("Stack before: " + stack);
+// System.out.println("Processing token: " + token);
+// System.out.println("Stack before: " + stack);
     
             if (isOperator(token)) {
                 if (isLogicalOperator(token)) {
@@ -99,14 +93,14 @@ public class TableArrayList extends AbstractTable {
                 stack.push(value);
             }
     
-            System.out.println("Stack after: " + stack);
+// System.out.println("Stack after: " + stack);
         }
     
         if (stack.size() != 1) {
             throw new IllegalStateException("Invalid condition expression");
         }
         Object element = stack.pop();
-        System.out.println(element.toString());
+// System.out.println(element.toString());
         return (boolean) element;
     }
     
@@ -224,8 +218,6 @@ public class TableArrayList extends AbstractTable {
         // where processing 
         List<Row> rows = where(conditions);
 
-        // need update the index also
-
         Map<Integer, Object> columnNoToUpdate = new HashMap<>(); // column no, new data
 
         Set<String> columnNames = updateMap.keySet(); 
@@ -268,8 +260,6 @@ public class TableArrayList extends AbstractTable {
         // where processing 
         List<Row> rows = where(conditions);
 
-        // need delete index too
-
         // idk if row needs an equal method that checks every value of its data to match??
         for (Row row : rows) {
             super.removeRow(row);
@@ -284,6 +274,7 @@ public class TableArrayList extends AbstractTable {
         • Example: SELECT * FROM student WHERE gpa > 3.8 AND age < 20
         • Example: SELECT * FROM student WHERE gpa > 3.8 OR age < 20
          */
+        // List<Row> result = new ArrayList<>(); 
         StringBuilder result = new StringBuilder();
         List<Row> selectedRows;
         if (conditions.size() == 0) {
@@ -291,16 +282,23 @@ public class TableArrayList extends AbstractTable {
         } else {
             selectedRows = where(conditions);
         }
+        // String[] headers = new String[cols.length];
         Integer[] colIndex = new Integer[cols.length];
         for (int i = 0; i < cols.length; i++) {
             result.append(cols[i].getName() + '\t');
+            // headers[i] = cols[i].getName();
             colIndex[i] = columnNoMap.get(cols[i].getName());
         }
         result.append('\n');
+        // Row header = new Row(cols.length, headers); 
+        // result.add(header);
         for (Row row : selectedRows) {
+            // Object[] newRowData = new Object[cols.length];
             for (int j = 0; j < colIndex.length; j++) {
                 result.append(row.getDataRow()[colIndex[j]].toString() + '\t');
             }
+            // Row r = new Row(cols.length, newRowData);
+            // result.add(r);
             result.append('\n');
         }
         return result.toString();

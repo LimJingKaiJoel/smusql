@@ -1,4 +1,4 @@
-package edu.smu.smusql.index;
+package edu.smu.smusql.indexing;
 
 import java.util.Collection;
 import java.util.List;
@@ -6,13 +6,13 @@ import java.util.Map;
 
 import edu.smu.smusql.Column;
 import edu.smu.smusql.Row;
+import edu.smu.smusql.exceptions.ColumnNotFoundException;
 
 public abstract class AbstractTable {
     protected Collection<Row> rows; 
     protected Column[] columns; 
     protected String tableName;
     protected Map<String, Integer> columnNoMap; 
-    public Map<Column, Index> indexes; // column and index 
     
     public AbstractTable(String name) {
         this.tableName = name;
@@ -48,10 +48,6 @@ public abstract class AbstractTable {
 
     public void removeRow(Row row) {
         this.rows.remove(row);
-    }
-
-    public void addIndex(Column c, Index i) {
-        indexes.put(c, i);
     }
 
     public abstract void insert(String[] values);
