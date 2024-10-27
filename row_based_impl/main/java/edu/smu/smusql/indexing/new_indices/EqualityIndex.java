@@ -1,17 +1,17 @@
-package edu.smu.smusql.indexing;
+package edu.smu.smusql.indexing.new_indices;
 
 import java.util.*;
 import edu.smu.smusql.Row;
 
-public class RangeIndex implements Index {
+public class EqualityIndex implements Index {
     private String columnName;
-    private NavigableMap<Object, List<Row>> indexMap;
+    private Map<Object, List<Row>> indexMap;
     private int columnIndex;
 
-    public RangeIndex(String columnName, int columnIndex) {
+    public EqualityIndex(String columnName, int columnIndex) {
         this.columnName = columnName;
         this.columnIndex = columnIndex;
-        this.indexMap = new TreeMap<>();
+        this.indexMap = new HashMap<>();
     }
 
     @Override
@@ -34,28 +34,21 @@ public class RangeIndex implements Index {
 
     @Override
     public List<Row> search(String operator, Object value) {
-        NavigableMap<Object, List<Row>> subMap;
         switch (operator) {
-            case ">":
-                subMap = indexMap.tailMap(value, false);
-                break;
-            case ">=":
-                subMap = indexMap.tailMap(value, true);
-                break;
-            case "<":
-                subMap = indexMap.headMap(value, false);
-                break;
-            case "<=":
-                subMap = indexMap.headMap(value, true);
-                break;
+            case "=":
+                return indexMap.getOrDefault(value, Collections.emptyList());
+            case "!=":
+                // Return all rows except those matching the value
+                List<Row> result = new ArrayList<>();
+                for (Map.Entry<Object, List<Row>> entry : indexMap.entrySet()) {
+                    if (!entry.getKey().equals(value)) {
+                        result.addAll(entry.getValue());
+                    }
+                }
+                return result;
             default:
                 return null;
         }
-        List<Row> result = new ArrayList<>();
-        for (List<Row> rows : subMap.values()) {
-            result.addAll(rows);
-        }
-        return result;
     }
 
     @Override

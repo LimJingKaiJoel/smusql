@@ -3,8 +3,9 @@ package edu.smu.smusql;
 import java.util.*;
 import java.util.regex.*;
 
-import edu.smu.smusql.indexing.TableArrayList;
-import edu.smu.smusql.indexing.AbstractTable;
+// IMPORTANT: the package here determines which table we use 
+import edu.smu.smusql.noindex.TableArrayList;
+import edu.smu.smusql.noindex.AbstractTable;
 import edu.smu.smusql.utils.Helper;
 import edu.smu.smusql.table.DefaultTable;
 // import edu.smu.smusql.table.ParallelStreamTable;

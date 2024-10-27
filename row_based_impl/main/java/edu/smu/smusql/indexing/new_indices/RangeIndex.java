@@ -1,4 +1,4 @@
-package edu.smu.smusql.indexing;
+package edu.smu.smusql.indexing.new_indices;
 
 import java.util.*;
 import edu.smu.smusql.Row;

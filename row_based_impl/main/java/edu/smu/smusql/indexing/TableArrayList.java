@@ -3,6 +3,7 @@ package edu.smu.smusql.indexing;
 import java.util.*;
 
 import edu.smu.smusql.*;
+import edu.smu.smusql.indexing.new_indices.*;
 
 public class TableArrayList extends AbstractTable {
     private Map<String, List<Index>> indexes;
@@ -182,16 +183,16 @@ public class TableArrayList extends AbstractTable {
 
             List<Row> indexedRows = null;
             if (indexes.containsKey(columnName)) {
-                for (Index index : indexes.get(columnName)) {
+                for (Index index : indexes.get(columnName)) { // in case got multiple indexes for a column
                     List<Row> result = index.search(operator, value);
                     if (result != null) {
                         indexedRows = result;
-                        break; // Use the first index that supports the operator
+                        break;
                     }
                 }
             }
 
-            if (indexedRows != null) {
+            if (indexedRows != null) { // got index
                 if (candidateRows == null) {
                     candidateRows = new HashSet<>(indexedRows);
                 } else {
@@ -199,10 +200,11 @@ public class TableArrayList extends AbstractTable {
                 }
             }
         }
+        
         List<Row> result = new ArrayList<>();
         Collection<Row> rowsToCheck;
         if (candidateRows == null) {
-            // No indexed columns in conditions, scan all rows
+            // no indexed columns in conditions, scan all rows
             rowsToCheck = super.getRows();
         } else {
             rowsToCheck = candidateRows;
@@ -264,7 +266,7 @@ public class TableArrayList extends AbstractTable {
             case "<=":
                 return ">=";
             default:
-                return operator; // '=', '!=', etc.
+                return operator; // '=' or '!='
         }
     }
 

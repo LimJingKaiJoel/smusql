@@ -3,6 +3,7 @@ package edu.smu.smusql;
 import java.util.*;
 import java.util.regex.*;
 
+// IMPORTANT: the package here determines which table we use 
 import edu.smu.smusql.indexing.TableArrayList;
 import edu.smu.smusql.indexing.AbstractTable;
 import edu.smu.smusql.utils.Helper;
@@ -44,7 +45,7 @@ public class Engine {
     }
 
     protected AbstractTable createTable(String name, String[] columns) {
-        // CHANGE THIS TABLE AS NEEDED
+        // CHANGE THIS TABLE AS NEEDED -- and also the imports above 
         return new TableArrayList(name, columns);
     }
 
