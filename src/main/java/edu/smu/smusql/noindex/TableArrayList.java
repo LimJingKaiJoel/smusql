@@ -8,7 +8,7 @@ import edu.smu.smusql.exceptions.ColumnNotFoundException;
 public class TableArrayList extends AbstractTable {
 
     // create a table with the fixed columns and empty arraylist of rows 
-    public TableArrayList(String[] colNames, String tableName) {
+    public TableArrayList(String tableName, String[] colNames) {
         // CREATE TABLE student (id, name, age, gpa, deans_list)
         super(tableName);
         Column[] cols = new Column[colNames.length];
@@ -21,7 +21,6 @@ public class TableArrayList extends AbstractTable {
 
         super.setColumns(cols);
         super.setRows(new ArrayList<Row>());
-
     }
 
     public void insert(String[] values) {
@@ -45,42 +44,42 @@ public class TableArrayList extends AbstractTable {
         super.addRow(row);
     }
 
-    private List<String> infixToPostfix(List<String> infixTokens) {
-        List<String> postfix = new ArrayList<>();
-        Stack<String> stack = new Stack<>();
+    // private List<String> infixToPostfix(List<String> infixTokens) {
+    //     List<String> postfix = new ArrayList<>();
+    //     Stack<String> stack = new Stack<>();
     
-        for (String token : infixTokens) {
-            if (isOperator(token)) {
-                while (!stack.isEmpty() && isOperator(stack.peek()) &&
-                        precedence(stack.peek()) >= precedence(token)) {
-                    postfix.add(stack.pop());
-                }
-                stack.push(token);
-            } else if (token.equals("(")) {
-                stack.push(token);
-            } else if (token.equals(")")) {
-                while (!stack.isEmpty() && !stack.peek().equals("(")) {
-                    postfix.add(stack.pop());
-                }
-                if (stack.isEmpty() || !stack.peek().equals("(")) {
-                    throw new IllegalArgumentException("Mismatched parentheses");
-                }
-                stack.pop(); // Remove '('
-            } else {
-                // Operand
-                postfix.add(token);
-            }
-        }
+    //     for (String token : infixTokens) {
+    //         if (isOperator(token)) {
+    //             while (!stack.isEmpty() && isOperator(stack.peek()) &&
+    //                     precedence(stack.peek()) >= precedence(token)) {
+    //                 postfix.add(stack.pop());
+    //             }
+    //             stack.push(token);
+    //         } else if (token.equals("(")) {
+    //             stack.push(token);
+    //         } else if (token.equals(")")) {
+    //             while (!stack.isEmpty() && !stack.peek().equals("(")) {
+    //                 postfix.add(stack.pop());
+    //             }
+    //             if (stack.isEmpty() || !stack.peek().equals("(")) {
+    //                 throw new IllegalArgumentException("Mismatched parentheses");
+    //             }
+    //             stack.pop(); // Remove '('
+    //         } else {
+    //             // Operand
+    //             postfix.add(token);
+    //         }
+    //     }
     
-        while (!stack.isEmpty()) {
-            if (stack.peek().equals("(") || stack.peek().equals(")")) {
-                throw new IllegalArgumentException("Mismatched parentheses");
-            }
-            postfix.add(stack.pop());
-        }
+    //     while (!stack.isEmpty()) {
+    //         if (stack.peek().equals("(") || stack.peek().equals(")")) {
+    //             throw new IllegalArgumentException("Mismatched parentheses");
+    //         }
+    //         postfix.add(stack.pop());
+    //     }
     
-        return postfix;
-    }
+    //     return postfix;
+    // }
     
     private int precedence(String token) {
         if (isComparisonOperator(token)) {
@@ -112,8 +111,10 @@ public class TableArrayList extends AbstractTable {
     }
     
     private boolean evaluateConditions(List<String> conditions, Row row) {
-        List<String> postfixTokens = infixToPostfix(conditions);
+        // List<String> postfixTokens = infixToPostfix(conditions);
+        List<String> postfixTokens = conditions;
         Stack<Object> stack = new Stack<>();
+        System.out.println(Arrays.toString(row.dataRow));
     
         for (String token : postfixTokens) {
             System.out.println("Processing token: " + token);
@@ -151,7 +152,9 @@ public class TableArrayList extends AbstractTable {
         if (stack.size() != 1) {
             throw new IllegalStateException("Invalid condition expression");
         }
-        return (boolean) stack.pop();
+        Object element = stack.pop();
+        System.out.println(element.toString());
+        return (boolean) element;
     }
     
     private Object parseLiteral(String literal) {
@@ -317,13 +320,40 @@ public class TableArrayList extends AbstractTable {
         return rows.size();
     }
 
-    public List<Row> select(Column[] cols, List<String> conditions) { // idk the format passed into this method 
+    public String select(Column[] cols, List<String> conditions) { // idk the format passed into this method 
         /*
         • Example: SELECT * FROM student
         • Example: SELECT * FROM student WHERE gpa > 3.8
         • Example: SELECT * FROM student WHERE gpa > 3.8 AND age < 20
         • Example: SELECT * FROM student WHERE gpa > 3.8 OR age < 20
          */
-        return where(conditions);
+        // List<Row> result = new ArrayList<>(); 
+        StringBuilder result = new StringBuilder();
+        List<Row> selectedRows;
+        if (conditions.size() == 0) {
+            selectedRows = new ArrayList<>(this.rows);
+        } else {
+            selectedRows = where(conditions);
+        }
+        // String[] headers = new String[cols.length];
+        Integer[] colIndex = new Integer[cols.length];
+        for (int i = 0; i < cols.length; i++) {
+            result.append(cols[i].getName() + '\t');
+            // headers[i] = cols[i].getName();
+            colIndex[i] = columnNoMap.get(cols[i].getName());
+        }
+        result.append('\n');
+        // Row header = new Row(cols.length, headers); 
+        // result.add(header);
+        for (Row row : selectedRows) {
+            // Object[] newRowData = new Object[cols.length];
+            for (int j = 0; j < colIndex.length; j++) {
+                result.append(row.getDataRow()[colIndex[j]].toString() + '\t');
+            }
+            // Row r = new Row(cols.length, newRowData);
+            // result.add(r);
+            result.append('\n');
+        }
+        return result.toString();
     }
 }

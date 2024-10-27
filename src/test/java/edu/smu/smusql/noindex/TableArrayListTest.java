@@ -15,7 +15,7 @@ class TableArrayListTest {
     @BeforeEach
     void setUp() {
         String[] columns = {"id", "name", "age", "gpa", "deans_list"};
-        table = new TableArrayList(columns, "student");
+        table = new TableArrayList("student", columns);
 
         // Insert sample data into the table
         table.insert(new String[]{"1", "Alice", "20", "3.9", "true"});

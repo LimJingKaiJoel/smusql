@@ -2,7 +2,9 @@ package edu.smu.smusql;
 
 import java.util.*;
 import java.util.regex.*;
-import edu.smu.smusql.table.AbstractTable;
+
+import edu.smu.smusql.noindex.TableArrayList;
+import edu.smu.smusql.noindex.AbstractTable;
 import edu.smu.smusql.utils.Helper;
 import edu.smu.smusql.table.DefaultTable;
 // import edu.smu.smusql.table.ParallelStreamTable;
@@ -43,7 +45,7 @@ public class Engine {
 
     protected AbstractTable createTable(String name, String[] columns) {
         // CHANGE THIS TABLE AS NEEDED
-        return new DefaultTable(name, columns);
+        return new TableArrayList(name, columns);
     }
 
     public String create(String query) {
@@ -89,9 +91,9 @@ public class Engine {
                             .toArray(Column[]::new);
 
             List<String> conditions = parseWhereConditions(whereClause);
-            List<Row> result = table.select(selectedColumns, conditions);
-
-            return formatResult(result, selectedColumns);
+            // List<Row> result = table.select(selectedColumns, conditions);
+            return table.select(selectedColumns, conditions);
+            // return formatResult(result, selectedColumns);
         }
         return "ERROR: Invalid SELECT statement";
     }
@@ -231,10 +233,10 @@ public class Engine {
     private String formatResult(List<Row> result, Column[] selectedColumns) {
         StringBuilder resultString = new StringBuilder();
 
-        for (Column column : selectedColumns) {
-            resultString.append(column.getName()).append("\t");
-        }
-        resultString.append("\n");
+        // for (Column column : selectedColumns) {
+        //     resultString.append(column.getName()).append("\t");
+        // }
+        // resultString.append("\n");
 
         for (Row row : result) {
             for (Object value : row.getDataRow()) {
