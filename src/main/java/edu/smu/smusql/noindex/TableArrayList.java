@@ -44,55 +44,6 @@ public class TableArrayList extends AbstractTable {
         super.addRow(row);
     }
 
-    // private List<String> infixToPostfix(List<String> infixTokens) {
-    //     List<String> postfix = new ArrayList<>();
-    //     Stack<String> stack = new Stack<>();
-    
-    //     for (String token : infixTokens) {
-    //         if (isOperator(token)) {
-    //             while (!stack.isEmpty() && isOperator(stack.peek()) &&
-    //                     precedence(stack.peek()) >= precedence(token)) {
-    //                 postfix.add(stack.pop());
-    //             }
-    //             stack.push(token);
-    //         } else if (token.equals("(")) {
-    //             stack.push(token);
-    //         } else if (token.equals(")")) {
-    //             while (!stack.isEmpty() && !stack.peek().equals("(")) {
-    //                 postfix.add(stack.pop());
-    //             }
-    //             if (stack.isEmpty() || !stack.peek().equals("(")) {
-    //                 throw new IllegalArgumentException("Mismatched parentheses");
-    //             }
-    //             stack.pop(); // Remove '('
-    //         } else {
-    //             // Operand
-    //             postfix.add(token);
-    //         }
-    //     }
-    
-    //     while (!stack.isEmpty()) {
-    //         if (stack.peek().equals("(") || stack.peek().equals(")")) {
-    //             throw new IllegalArgumentException("Mismatched parentheses");
-    //         }
-    //         postfix.add(stack.pop());
-    //     }
-    
-    //     return postfix;
-    // }
-    
-    // private int precedence(String token) {
-    //     if (isComparisonOperator(token)) {
-    //         return 3;
-    //     } else if (token.equalsIgnoreCase("AND")) {
-    //         return 2;
-    //     } else if (token.equalsIgnoreCase("OR")) {
-    //         return 1;
-    //     } else {
-    //         return 0;
-    //     }
-    // }
-
     public List<Row> where(List<String> conditions) {
 // for (String condition : conditions) {
 //     System.out.print("Condition: " + condition + " |");
@@ -109,7 +60,6 @@ public class TableArrayList extends AbstractTable {
     }
     
     private boolean evaluateConditions(List<String> conditions, Row row) {
-        // List<String> postfixTokens = infixToPostfix(conditions);
         List<String> postfixTokens = conditions;
         Stack<Object> stack = new Stack<>();
 // System.out.println(Arrays.toString(row.dataRow));

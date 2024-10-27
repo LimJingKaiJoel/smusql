@@ -64,7 +64,7 @@ public class Main {
         long startTime = System.nanoTime();
 
         // Set the number of queries to execute
-        int numberOfQueries = 1000000;
+        int numberOfQueries = 10000;
 
         // Create tables
         dbEngine.executeSQL("CREATE TABLE users (id, name, age, city)");
