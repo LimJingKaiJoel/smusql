@@ -81,25 +81,23 @@ public class TableArrayList extends AbstractTable {
     //     return postfix;
     // }
     
-    private int precedence(String token) {
-        if (isComparisonOperator(token)) {
-            return 3;
-        } else if (token.equalsIgnoreCase("AND")) {
-            return 2;
-        } else if (token.equalsIgnoreCase("OR")) {
-            return 1;
-        } else {
-            return 0;
-        }
-    }
+    // private int precedence(String token) {
+    //     if (isComparisonOperator(token)) {
+    //         return 3;
+    //     } else if (token.equalsIgnoreCase("AND")) {
+    //         return 2;
+    //     } else if (token.equalsIgnoreCase("OR")) {
+    //         return 1;
+    //     } else {
+    //         return 0;
+    //     }
+    // }
 
-    // NOTE: for complex queries, i cant seem to figure out why it doesnt work, it's not evaluating the final condition correctly :( 
-    // will debug when i have time
     public List<Row> where(List<String> conditions) {
-        for (String condition : conditions) {
-            System.out.print("Condition: " + condition + " |");
-        } 
-        System.out.println();
+// for (String condition : conditions) {
+//     System.out.print("Condition: " + condition + " |");
+// } 
+// System.out.println();
 
         List<Row> result = new ArrayList<>();
         for (Row row : super.getRows()) {
@@ -114,11 +112,11 @@ public class TableArrayList extends AbstractTable {
         // List<String> postfixTokens = infixToPostfix(conditions);
         List<String> postfixTokens = conditions;
         Stack<Object> stack = new Stack<>();
-        System.out.println(Arrays.toString(row.dataRow));
+// System.out.println(Arrays.toString(row.dataRow));
     
         for (String token : postfixTokens) {
-            System.out.println("Processing token: " + token);
-            System.out.println("Stack before: " + stack);
+// System.out.println("Processing token: " + token);
+// System.out.println("Stack before: " + stack);
     
             if (isOperator(token)) {
                 if (isLogicalOperator(token)) {
@@ -146,7 +144,7 @@ public class TableArrayList extends AbstractTable {
                 stack.push(value);
             }
     
-            System.out.println("Stack after: " + stack);
+// System.out.println("Stack after: " + stack);
         }
     
         if (stack.size() != 1) {
