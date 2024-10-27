@@ -68,8 +68,11 @@ public class TableArrayList extends AbstractTable {
                 columnNoToUpdate.put(columnNoMap.get(columnName), updateMap.get(columnName));
             } else {
                 System.out.println(columnName + " does not exist in the table.");
+
                 return 0;
             }
+            columnNoToUpdate.put(col.getNumber(), updateMap.get(columnName));
+            // char colType = col.getType();
         }
 
         for (Row row : rows) {
