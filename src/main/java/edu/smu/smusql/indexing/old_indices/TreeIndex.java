@@ -1,51 +1,39 @@
-package edu.smu.smusql.index.datastruc;
+package edu.smu.smusql.indexing.old_indices;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentSkipListMap;
 
-import edu.smu.smusql.index.Index;
+// K is the thing we are looking for, V is the row
+public class TreeIndex<K extends Comparable<K>, V> implements Index<K, V> {
+    private final TreeMap<K, List<V>> treeMap;
 
-/**
- * SkipListIndex uses Java's ConcurrentSkipListMap.
- * 
- *
- * @param <K> The type of the key (must be Comparable).
- * @param <V> The type of the value (typically Row).
- */
-public class SkipListIndex<K extends Comparable<K>, V> implements Index<K, V> {
-    private final ConcurrentSkipListMap<K, List<V>> skipListMap;
-
-    /**
-     * Constructor to initialize the SkipListIndex.
-     */
-    public SkipListIndex() {
-        this.skipListMap = new ConcurrentSkipListMap<>();
+    public TreeIndex() {
+        this.treeMap = new TreeMap<>();
     }
 
     /**
-     * Inserts a key-value pair into the SkipListIndex.
+     * Inserts a key-value pair into the TreeIndex.
      *
      * @param key   The key to insert.
      * @param value The row reference associated with the key.
      */
     @Override
     public void insert(K key, V value) {
-        skipListMap.computeIfAbsent(key, k -> new ArrayList<>()).add(value);
+        treeMap.computeIfAbsent(key, k -> new ArrayList<>()).add(value);
     }
 
     /**
-     * Deletes a key-value pair from the SkipListIndex.
+     * Deletes a key-value pair from the TreeIndex.
      *
      * @param key   The key of the pair to delete.
      * @param value The row reference associated with the key.
      */
     @Override
     public void delete(K key, V value) {
-        List<V> values = skipListMap.get(key);
+        List<V> values = treeMap.get(key);
         if (values != null) {
             values.remove(value);
             if (values.isEmpty()) {
-                skipListMap.remove(key);
+                treeMap.remove(key);
             }
         }
     }
@@ -58,8 +46,8 @@ public class SkipListIndex<K extends Comparable<K>, V> implements Index<K, V> {
      */
     @Override
     public List<V> search(K key) {
-        List<V> values = skipListMap.get(key);
-        return values != null ? new ArrayList<>(values) : new ArrayList<>();
+        List<V> values = treeMap.get(key);
+        return values != null ? new ArrayList<V>(values) : new ArrayList<V>();
     }
 
     /**
@@ -75,45 +63,33 @@ public class SkipListIndex<K extends Comparable<K>, V> implements Index<K, V> {
 
         switch (operator) {
             case ">":
-                Map<K, List<V>> tailMapGreater = skipListMap.tailMap(value, false);
+                Map<K, List<V>> tailMapGreater = treeMap.tailMap(value, false);
                 Collection<List<V>> greaterValues = tailMapGreater.values();
                 for (List<V> list : greaterValues) {
-                    for (V row : list) {
-                        result.add(row);
-                    }
+                    result.addAll(list);
                 }
                 break;
-    
             case ">=":
-                Map<K, List<V>> tailMapGreaterOrEqual = skipListMap.tailMap(value, true);
+                Map<K, List<V>> tailMapGreaterOrEqual = treeMap.tailMap(value, true);
                 Collection<List<V>> greaterOrEqualValues = tailMapGreaterOrEqual.values();
                 for (List<V> list : greaterOrEqualValues) {
-                    for (V row : list) {
-                        result.add(row);
-                    }
+                    result.addAll(list);
                 }
                 break;
-    
             case "<":
-                Map<K, List<V>> headMapLess = skipListMap.headMap(value, false);
+                Map<K, List<V>> headMapLess = treeMap.headMap(value, false);
                 Collection<List<V>> lessValues = headMapLess.values();
                 for (List<V> list : lessValues) {
-                    for (V row : list) {
-                        result.add(row);
-                    }
+                    result.addAll(list);
                 }
                 break;
-    
             case "<=":
-                Map<K, List<V>> headMapLessOrEqual = skipListMap.headMap(value, true);
+                Map<K, List<V>> headMapLessOrEqual = treeMap.headMap(value, true);
                 Collection<List<V>> lessOrEqualValues = headMapLessOrEqual.values();
                 for (List<V> list : lessOrEqualValues) {
-                    for (V row : list) {
-                        result.add(row);
-                    }
+                    result.addAll(list);
                 }
                 break;
-    
             default:
                 throw new IllegalArgumentException("Unsupported operator: " + operator);
         }
@@ -121,10 +97,10 @@ public class SkipListIndex<K extends Comparable<K>, V> implements Index<K, V> {
         return result;
     }
 
-    // debug
+    // Debug method because I can't test it out yet
     public void traverse() {
-        for (Map.Entry<K, List<V>> entry : skipListMap.entrySet()) {
-            System.out.print("Key: " + entry.getKey() + " -> Rows: ");
+        for (Map.Entry<K, List<V>> entry : treeMap.entrySet()) {
+            System.out.print("Key: " + entry.getKey() + " MAPPING TO THESE Rows: ");
             for (V row : entry.getValue()) {
                 System.out.print(row + " ");
             }

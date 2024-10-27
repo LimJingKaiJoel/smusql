@@ -1,4 +1,4 @@
-package edu.smu.smusql.index;
+package edu.smu.smusql.indexing.old_indices;
 
 import java.util.*;
 
