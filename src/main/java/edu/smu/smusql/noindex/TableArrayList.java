@@ -151,7 +151,7 @@ public class TableArrayList extends AbstractTable {
             throw new IllegalStateException("Invalid condition expression");
         }
         Object element = stack.pop();
-        System.out.println(element.toString());
+// System.out.println(element.toString());
         return (boolean) element;
     }
     
