@@ -63,15 +63,12 @@ public class TableArrayList extends AbstractTable {
 
         Set<String> columnNames = updateMap.keySet(); 
         for (String columnName : columnNames) {
-            Column col;
             if (columnNoMap.get(columnName) != null) {
                 columnNoToUpdate.put(columnNoMap.get(columnName), updateMap.get(columnName));
             } else {
                 System.out.println(columnName + " does not exist in the table.");
-
                 return 0;
             }
-            columnNoToUpdate.put(col.getNumber(), updateMap.get(columnName));
             // char colType = col.getType();
         }
 
