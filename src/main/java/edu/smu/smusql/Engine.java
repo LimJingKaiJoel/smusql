@@ -5,12 +5,12 @@ import java.util.regex.*;
 
 // IMPORTANT: the package here determines which table we use 
 import edu.smu.smusql.noindex.TableArrayList;
+import edu.smu.smusql.column.AbstractColumn;
+import edu.smu.smusql.column.HashMapColumn;
 import edu.smu.smusql.noindex.AbstractTable;
+import edu.smu.smusql.utils.Condition;
 import edu.smu.smusql.utils.Helper;
-import edu.smu.smusql.table.DefaultTable;
-// import edu.smu.smusql.table.ParallelStreamTable;
-
-import java.util.Stack;
+import edu.smu.smusql.utils.WhereCondition;
 
 public class Engine {
     private Map<String, AbstractTable> database = new HashMap<>();
@@ -45,7 +45,7 @@ public class Engine {
     }
 
     protected AbstractTable createTable(String name, String[] columns) {
-        // CHANGE THIS TABLE AS NEEDED
+        // TODO: CHANGE THIS TABLE AS NEEDED
         return new TableArrayList(name, columns);
     }
 
@@ -86,12 +86,12 @@ public class Engine {
             if (table == null) {
                 return "ERROR: Table " + tableName + " does not exist";
             }
-            Column[] selectedColumns = columns.equals("*") ? table.getColumns()
+            AbstractColumn[] selectedColumns = columns.equals("*") ? table.getColumns()
                     : Arrays.stream(columns.split("\\s*,\\s*"))
-                            .map(Column::new)
-                            .toArray(Column[]::new);
+                            .map(HashMapColumn::new)
+                            .toArray(AbstractColumn[]::new);
 
-            List<String> conditions = parseWhereConditions(whereClause);
+            WhereCondition conditions = parseWhereConditions(whereClause);
             // List<Row> result = table.select(selectedColumns, conditions);
             return table.select(selectedColumns, conditions);
             // return formatResult(result, selectedColumns);
@@ -104,7 +104,7 @@ public class Engine {
         if (matcher.find()) {
             String tableName = matcher.group(1);
             String updates = matcher.group(2);
-            String conditions = matcher.group(3);
+            String whereClause = matcher.group(3);
 
             AbstractTable table = getTable(tableName);
             if (table == null) {
@@ -116,8 +116,8 @@ public class Engine {
                 updateMap.put(parts[0], Helper.trimQuotes(parts[1]));
             }
 
-            List<String> conditionsList = parseWhereConditions(conditions);
-            int updatedRows = table.update(updateMap, conditionsList);
+            WhereCondition conditions = parseWhereConditions(whereClause);
+            int updatedRows = table.update(updateMap, conditions);
             return updatedRows + " row(s) updated in " + tableName;
         }
         return "ERROR: Invalid UPDATE statement";
@@ -133,118 +133,60 @@ public class Engine {
             if (table == null) {
                 return "ERROR: Table " + tableName + " does not exist";
             }
-            List<String> conditions = parseWhereConditions(whereClause);
+            WhereCondition conditions = parseWhereConditions(whereClause);
             int deletedRows = table.delete(conditions);
             return deletedRows + " row(s) deleted from " + tableName;
         }
         return "ERROR: Invalid DELETE statement";
     }
 
-    public List<String> parseWhereConditions(String whereClause) {
+    public WhereCondition parseWhereConditions(String whereClause) {
         if (whereClause == null || whereClause.trim().isEmpty()) {
-            return Collections.emptyList();
+            return null;
         }
-        return convertToPostfix(tokenizeWhereClause(whereClause));
+        return tokenizeWhereClause(whereClause);
     }
 
-    private List<String> tokenizeWhereClause(String whereClause) {
-        List<String> tokens = new ArrayList<>();
-        StringBuilder currentToken = new StringBuilder();
-        boolean inQuotes = false;
+    private WhereCondition tokenizeWhereClause(String whereClause) {
+        WhereCondition result = new WhereCondition(null, null, null);
+        String[] parts = whereClause.split("\\s+(AND|OR)\\s+");
 
-        for (char c : whereClause.toCharArray()) {
-            if ((c == '\'' || c == '"') && !inQuotes) {
-                inQuotes = true;
-                // currentToken.append(c);
-            } else if ((c == '\'' || c == '"') && inQuotes) {
-                inQuotes = false;
-                // currentToken.append(c);
-            } else if (!inQuotes && (c == '(' || c == ')' || c == ' ')) {
-                if (currentToken.length() > 0) {
-                    tokens.add(currentToken.toString());
-                    currentToken = new StringBuilder();
-                }
-                if (c != ' ') {
-                    tokens.add(String.valueOf(c));
-                }
-            } else {
-                currentToken.append(c);
+        // Parse first condition
+        String firstCondition = parts[0].trim();
+        Condition condition1 = parseCondition(firstCondition);
+
+        result.setCondition1(condition1);
+
+        // If there's a second condition
+        if (parts.length > 1) {
+            String secondCondition = parts[1].trim();
+            Condition condition2 = parseCondition(secondCondition);
+            result.setCondition2(condition2);
+
+            // Find the operator (AND/OR)
+            Matcher matcher = Pattern.compile("\\s+(AND|OR)\\s+").matcher(whereClause);
+            if (matcher.find()) {
+                result.setOperator(matcher.group(1));
             }
         }
 
-        if (currentToken.length() > 0) {
-            tokens.add(currentToken.toString());
+        return result;
+    }
+
+    private Condition parseCondition(String condition) {
+        Condition result = null;
+
+        // Match patterns like: column operator value
+        // Operators can be =, >, <, >=, <=, <>
+        Matcher condMatcher = Pattern.compile("(\\w+)\\s*([=<>]+|<=|>=|<>)\\s*(.+)").matcher(condition);
+
+        if (condMatcher.find()) {
+            String column = condMatcher.group(1);
+            String operator = condMatcher.group(2);
+            String value = Helper.trimQuotes(condMatcher.group(3));
+            result = new Condition(column, operator, value);
         }
 
-        return tokens;
-    }
-
-    private List<String> convertToPostfix(List<String> tokens) {
-        List<String> output = new ArrayList<>();
-        Stack<String> operators = new Stack<>();
-
-        for (String token : tokens) {
-            if (isOperand(token)) {
-                output.add(token);
-            } else if (token.equals("(")) {
-                operators.push(token);
-            } else if (token.equals(")")) {
-                while (!operators.isEmpty() && !operators.peek().equals("(")) {
-                    output.add(operators.pop());
-                }
-                if (!operators.isEmpty() && operators.peek().equals("(")) {
-                    operators.pop();
-                }
-            } else if (isOperator(token)) {
-                while (!operators.isEmpty() && precedence(operators.peek()) >= precedence(token)) {
-                    output.add(operators.pop());
-                }
-                operators.push(token);
-            }
-        }
-
-        while (!operators.isEmpty()) {
-            output.add(operators.pop());
-        }
-
-        return output;
-    }
-
-    private boolean isOperand(String token) {
-        return !isOperator(token) && !token.equals("(") && !token.equals(")");
-    }
-
-    private boolean isOperator(String token) {
-        return token.equalsIgnoreCase("AND") || token.equalsIgnoreCase("OR") ||
-                token.equals("=") || token.equals(">") || token.equals("<") ||
-                token.equals(">=") || token.equals("<=") || token.equals("!=");
-    }
-
-    private int precedence(String operator) {
-        if (operator.equalsIgnoreCase("AND"))
-            return 2;
-        if (operator.equalsIgnoreCase("OR"))
-            return 1;
-        if (operator.equals("=") || operator.equals(">") || operator.equals("<") ||
-                operator.equals(">=") || operator.equals("<=") || operator.equals("!="))
-            return 3;
-        return 0;
-    }
-
-    private String formatResult(List<Row> result, Column[] selectedColumns) {
-        StringBuilder resultString = new StringBuilder();
-
-        // for (Column column : selectedColumns) {
-        //     resultString.append(column.getName()).append("\t");
-        // }
-        // resultString.append("\n");
-
-        for (Row row : result) {
-            for (Object value : row.getDataRow()) {
-                resultString.append(value).append("\t");
-            }
-            resultString.append("\n");
-        }
-        return resultString.toString();
+        return result;
     }
 }
