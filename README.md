@@ -6,6 +6,8 @@ Assuming you are in the ROOT of this directory.
 
 A makefile has been created with all the common commands needed to work with the Java code.
 
+**NOTE: The makefile below only works on UNIX systems**
+
 ```bash
 # cleans, builds and runs the project
 make exec
