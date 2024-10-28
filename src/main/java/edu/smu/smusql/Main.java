@@ -22,17 +22,44 @@ public class Main {
 
         // dbEngine.executeSQL("CREATE TABLE users (id, name, age, city)");
         // dbEngine.executeSQL("INSERT INTO users VALUES (1, 'Alice', 25, 'New York')");
-        // dbEngine.executeSQL("INSERT INTO users VALUES (2, 'Bob', 30, 'Los Angeles')");
+        // dbEngine.executeSQL("INSERT INTO users VALUES (2, 'Bob', 30, 'Los
+        // Angeles')");
+
+        // System.out.println("You should see both rows");
         // System.out.println(dbEngine.executeSQL("SELECT * FROM users"));
+
+        // System.out.println("You should see both Alice and Bob");
         // System.out.println(dbEngine.executeSQL("SELECT name FROM users"));
-        // System.out.println(dbEngine.executeSQL("SELECT name, age FROM users WHERE id = 1"));
+
+        // System.out.println("You should see 'Alice', 25");
+        // System.out.println(dbEngine.executeSQL("SELECT name, age FROM users WHERE id
+        // = 1"));
+
+        // System.out.println("You should see 1, 'Alice', 25, 'New York'");
         // System.out.println(dbEngine.executeSQL("SELECT * FROM users WHERE id = 1"));
-        // dbEngine.executeSQL("UPDATE users SET age = 31 WHERE city = 'Los Angeles' OR id = 1");
+
+        // System.out.println("You should see both rows");
+        // System.out.println(dbEngine.executeSQL("SELECT * FROM users WHERE id = 1 OR
+        // name = 'Bob"));
+
+        // dbEngine.executeSQL("UPDATE users SET age = 31 WHERE city = 'Los Angeles' OR
+        // id = 1");
+
+        // System.out.println("You should see both rows but age is 31");
         // System.out.println(dbEngine.executeSQL("SELECT * FROM users"));
-        // dbEngine.executeSQL("UPDATE users SET age = 55 WHERE id = 1 AND city = 'New York'");
+
+        // dbEngine.executeSQL("UPDATE users SET age = 55 WHERE id = 1 AND city = 'New
+        // York'");
+
+        // System.out.println("You should see both rows but Alice age is 55");
         // System.out.println(dbEngine.executeSQL("SELECT * FROM users"));
+
+        // System.out.println("You should see only Bob");
+        // System.out.println(dbEngine.executeSQL("SELECT * FROM users WHERE id > 1"));
+
         // dbEngine.executeSQL(
-        //         "DELETE FROM users WHERE (id = 1 AND city = 'New York') OR (id = 2 AND city = 'Los Angeles')");
+        // "DELETE FROM users WHERE id = 1 AND city = 'New York'");
+        // System.out.println("You should see only Bob");
         // System.out.println(dbEngine.executeSQL("SELECT * FROM users"));
 
         while (true) {
@@ -41,12 +68,7 @@ public class Main {
             if (query.equalsIgnoreCase("exit")) {
                 break;
             } else if (query.equalsIgnoreCase("evaluate")) {
-                long startTime = System.nanoTime();
                 autoEvaluate();
-                long stopTime = System.nanoTime();
-                long elapsedTime = stopTime - startTime;
-                double elapsedTimeInSecond = (double) elapsedTime / 1_000_000_000;
-                System.out.println("Time elapsed: " + elapsedTimeInSecond + " seconds");
                 break;
             }
 
@@ -107,14 +129,15 @@ public class Main {
                     break;
             }
 
-            long queryEndTime = System.nanoTime();
-            long queryElapsedTime = queryEndTime - queryStartTime;
+            long queryElapsedTime = System.nanoTime() - queryStartTime;
             double queryElapsedTimeInSecond = (double) queryElapsedTime / 1_000_000_000;
             queryTimes.computeIfAbsent(queryType, k -> new ArrayList<>()).add(queryElapsedTimeInSecond);
 
             // Print progress every 100,000 queries
             if (i % 10000 == 0) {
-                System.out.println("Processed " + i + " queries... ");
+                double timeSoFar = (System.nanoTime() - startTime) / 1_000_000_000;
+                System.out
+                        .println("Processed " + i + " queries in " + String.format("%.2f", timeSoFar) + " seconds...");
             }
         }
 
