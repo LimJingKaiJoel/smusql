@@ -5,6 +5,9 @@ import java.util.*;
 import edu.smu.smusql.*;
 import edu.smu.smusql.column.AbstractColumn;
 import edu.smu.smusql.column.TreeMapColumn;
+import edu.smu.smusql.column.HashMapColumn;
+import edu.smu.smusql.column.CustomHashMapColumn;
+
 import edu.smu.smusql.utils.WhereCondition;
 
 public class TableArrayList extends AbstractTable {
@@ -18,7 +21,7 @@ public class TableArrayList extends AbstractTable {
 
         for (int i = 0; i < cols.length; i++) {
             // TODO: Change COLUMN IMPL here
-            cols[i] = new HashMapColumn(colNames[i]);
+            cols[i] = new CustomHashMapColumn(colNames[i]);
             columnNoMap.put(colNames[i], i);
         }
 
