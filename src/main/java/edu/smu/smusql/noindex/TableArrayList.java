@@ -104,14 +104,17 @@ public class TableArrayList extends AbstractTable {
          */
 
         // where processing
-        List<Row> rows = filterRows(conditions);
+        List<Row> filteredRows = filterRows(conditions);
 
         // idk if row needs an equal method that checks every value of its data to
         // match??
-        for (Row row : rows) {
+        for (Row row : filteredRows) {
+            for (AbstractColumn col : super.columns) {
+                col.removeRow(row.getDataRow()[columnNoMap.get(col.getName())].toString(), row);
+            }
             super.removeRow(row);
         }
-        return rows.size();
+        return filteredRows.size();
     }
 
     public String select(AbstractColumn[] cols, WhereCondition conditions) {
