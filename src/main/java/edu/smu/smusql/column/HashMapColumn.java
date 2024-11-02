@@ -28,6 +28,18 @@ public class HashMapColumn extends AbstractColumn {
     };
 
     @Override
+    public void removeRow(String columnValue, Row row) {
+        List<Row> rows = this.values.get(columnValue);
+        if (rows != null) {
+            if (rows.size() == 1) {
+                this.values.remove(columnValue);
+            } else {
+                rows.remove(row);
+            }
+        }
+    }
+
+    @Override
     public List<Row> getRows(String operator, String value) {
         List<Row> result = new ArrayList<>();
 
