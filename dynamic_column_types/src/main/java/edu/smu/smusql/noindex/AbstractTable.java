@@ -1,6 +1,7 @@
 package edu.smu.smusql.noindex;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -49,8 +50,13 @@ public abstract class AbstractTable {
         this.rows.add(row);
     }
 
-    public void removeRow(Row row) {
-        this.rows.remove(row);
+    public boolean removeRow(Row row) {
+        for (Row r : rows) {
+            if (r.equals(row)) {
+                return this.rows.remove(r);
+            } 
+        }
+        return false;
     }
 
     public abstract void insert(String[] values);

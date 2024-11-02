@@ -83,17 +83,21 @@ public class TableArrayList extends AbstractTable {
         List<Row> rows = filterRows(conditions);
 
         Map<Integer, Object> columnNoToUpdate = new HashMap<>(); // column no, new data
+
         Set<String> columnNames = updateMap.keySet();
         for (String columnName : columnNames) {
+
             if (columnNoMap.get(columnName) != null) {
-                if (columns[columnNoMap.get(columnName)].getType() == 'n') {
+
+                if (columns[columnNoMap.get(columnName)].getType() == 'n') { // numeric
                     try {
                         Double newVal = Double.parseDouble(updateMap.get(columnName));
                         columnNoToUpdate.put(columnNoMap.get(columnName), newVal);
                     } catch (NumberFormatException ex) {
                         System.out.println(String.format("%s must be a numeric", columnName));
                     }
-                } else {
+
+                } else { // string or id
                     columnNoToUpdate.put(columnNoMap.get(columnName), updateMap.get(columnName));
                 }
                 
@@ -103,11 +107,14 @@ public class TableArrayList extends AbstractTable {
             }
         }
 
+        // updating column data and row data
         for (Row row : rows) {
             Object[] rowData = row.getDataRow();
+
             for (Integer colNo : columnNoToUpdate.keySet()) {
                 AbstractColumn col = columns[colNo]; 
-                if (col instanceof TreeMapColumn) {
+
+                if (col instanceof TreeMapColumn) { // update numeric column
                     TreeMap<Double, List<Row>> colData = ((TreeMapColumn) col).getValues();
                     
 try {
@@ -134,12 +141,10 @@ try {
                     }
                     newRows.add(row);
                     colData.put((Double) columnNoToUpdate.get(colNo), newRows);
-                } else {
+
+                } else { // update string column
                     HashMap<String, List<Row>> colData = ((HashMapColumn) col).getValues();
                     System.out.println(rowData[colNo]);
-                    for (String s : colData.keySet()) {
-                        System.out.println("s");
-                    }
                     System.out.println(colData.get(rowData[colNo]));
                     colData.get(rowData[colNo]).remove(row); 
                     List<Row> newRows = new ArrayList<>();
@@ -149,6 +154,8 @@ try {
                     newRows.add(row);
                     colData.put((String) columnNoToUpdate.get(colNo), rows);
                 }
+
+
                 rowData[colNo] = columnNoToUpdate.get(colNo);
             }
             row.setDataRow(rowData);
@@ -173,6 +180,7 @@ try {
 
 try {
     colData.get((Double) rowData[i]).size();
+    // System.out.println("updated successfully");
 } catch (NullPointerException ex) {
     System.out.println(conditions.toString());
     System.out.println();
@@ -188,14 +196,21 @@ try {
     System.exit(0);
 }
 
-                    if (colData.get(rowData[i]).size() == 1) {
-                        colData.remove(rowData[i]);
-                    } else {
-                        colData.get(rowData[i]).remove(row); 
-                    }
+                    // if (colData.get(rowData[i]).size() == 1) {
+                    //     colData.remove(rowData[i]);
+                    // } else {
+                    //     colData.get(rowData[i]).remove(row); 
+                    // }
+                    colData.get(rowData[i]).remove(row); 
                 }
             }
-            super.removeRow(row);
+            boolean deleted = super.removeRow(row);
+            if (deleted) {
+                System.out.println("deleted successfully");
+            } else {
+                System.out.println("delete failed");
+            }
+            // System.out.println(super.removeRow(row));
         }
         
         return rows.size();

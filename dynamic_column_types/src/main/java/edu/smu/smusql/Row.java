@@ -25,7 +25,9 @@ public class Row {
             Object[] rowData = ((Row) obj).getDataRow(); 
             if (rowData.length != dataRow.length) return false; 
             for (int i = 0; i < rowData.length; i++) {
-                if (!rowData[i].equals(dataRow[i])) return false;
+                if (!rowData[i].toString().equals(dataRow[i].toString())) {
+                    return false;
+                }
             }
             return true;
         }
