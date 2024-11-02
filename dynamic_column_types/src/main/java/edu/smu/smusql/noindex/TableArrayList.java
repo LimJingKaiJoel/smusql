@@ -196,21 +196,22 @@ try {
     System.exit(0);
 }
 
-                    // if (colData.get(rowData[i]).size() == 1) {
-                    //     colData.remove(rowData[i]);
-                    // } else {
-                    //     colData.get(rowData[i]).remove(row); 
-                    // }
-                    colData.get(rowData[i]).remove(row); 
+                    if (colData.get(rowData[i]).size() == 1) {
+                        colData.remove(rowData[i]);
+                    } else {
+                        colData.get(rowData[i]).remove(row); 
+                    }
+                    // colData.get(rowData[i]).remove(row); 
+                } else {
+                    HashMap<String, List<Row>> colData = ((HashMapColumn) columns[i]).getValues();
+                    if (colData.get(rowData[i]).size() == 1) {
+                        colData.remove(rowData[i]);
+                    } else {
+                        colData.get(rowData[i]).remove(row); 
+                    }
                 }
             }
-            boolean deleted = super.removeRow(row);
-            if (deleted) {
-                System.out.println("deleted successfully");
-            } else {
-                System.out.println("delete failed");
-            }
-            // System.out.println(super.removeRow(row));
+            super.removeRow(row);
         }
         
         return rows.size();
