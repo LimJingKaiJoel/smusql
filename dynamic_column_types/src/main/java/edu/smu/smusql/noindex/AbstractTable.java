@@ -72,7 +72,7 @@ public abstract class AbstractTable {
         String operator = conditions.getOperator();
 
         // Get rows that match the first condition
-        List<Row> filteredRows = this.columns[columnNoMap.get(condition1.getColumnName())].getRows(condition1.getOperator(), condition1.getValue().toString());
+        List<Row> filteredRows = this.columns[columnNoMap.get(condition1.getColumnName())].getRows(condition1.getOperator(), condition1.getValue());
 
         // If there is no second condition, return the rows that match the first condition
         if (condition2 == null) {
@@ -81,11 +81,11 @@ public abstract class AbstractTable {
 
         // If operator is OR, return the rows that match either condition
         if (operator.equals("OR")) {
-            filteredRows.addAll(this.columns[columnNoMap.get(condition2.getColumnName())].getRows(condition2.getOperator(), condition2.getValue().toString()));
+            filteredRows.addAll(this.columns[columnNoMap.get(condition2.getColumnName())].getRows(condition2.getOperator(), condition2.getValue()));
         } else {
             // If operator is AND, return the rows that match both conditions
             // Check if the rows in filteredRows pass the second condition
-            filteredRows.retainAll(this.columns[columnNoMap.get(condition2.getColumnName())].getRows(condition2.getOperator(), condition2.getValue().toString()));
+            filteredRows.retainAll(this.columns[columnNoMap.get(condition2.getColumnName())].getRows(condition2.getOperator(), condition2.getValue()));
         }
 
         return filteredRows;
