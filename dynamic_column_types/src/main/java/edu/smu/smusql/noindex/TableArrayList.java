@@ -43,7 +43,7 @@ public class TableArrayList extends AbstractTable {
             AbstractColumn col = super.columns[i];
             rowData[i] = values[i]; 
             char type = col.getType(); 
-            if (type != 'i' || type == '0' || type == 'n') {
+            if (type == '0' || type == 'n') {
                 try {
                     double val = Double.parseDouble(values[i]); 
                     rowData[i] = val; 
@@ -52,6 +52,9 @@ public class TableArrayList extends AbstractTable {
                     col.setType('s'); // string 
                     rowData[i] = values[i]; 
                 }
+            } else {
+                col.setType('s');
+                rowData[i] = values[i]; 
             }
         }
         row.setDataRow(rowData);
@@ -114,26 +117,27 @@ public class TableArrayList extends AbstractTable {
             for (Integer colNo : columnNoToUpdate.keySet()) {
                 AbstractColumn col = columns[colNo]; 
 
-                if (col instanceof TreeMapColumn) { // update numeric column
+                if (col.getType() == 'n') { // update numeric column
                     TreeMap<Double, List<Row>> colData = ((TreeMapColumn) col).getValues();
+                    colData.get(rowData[colNo]).remove(row); 
                     
-try {
-                        colData.get(rowData[colNo]).remove(row); 
-} catch (NullPointerException ex) {
-    System.out.println(conditions.toString());
-    System.out.println();
-    System.out.println(colData.ceilingKey((Double) rowData[colNo]));
-    System.out.println(colData.floorKey((Double) rowData[colNo]));
-    System.out.println(colData.get((Double) rowData[colNo]));
-    System.out.println(rowData[colNo]);
-    System.out.println(col.getName());
-    System.out.println(col.getType());
-    System.out.println("update error");
-    for (String s : updateMap.keySet()) {
-        System.out.println(s + " " + updateMap.get(s));
-    }
-    System.exit(0);
-}
+// try {
+//                         colData.get(rowData[colNo]).remove(row); 
+// } catch (NullPointerException ex) {
+//     System.out.println(conditions.toString());
+//     System.out.println();
+//     System.out.println(colData.ceilingKey((Double) rowData[colNo]));
+//     System.out.println(colData.floorKey((Double) rowData[colNo]));
+//     System.out.println(colData.get((Double) rowData[colNo]));
+//     System.out.println(rowData[colNo]);
+//     System.out.println(col.getName());
+//     System.out.println(col.getType());
+//     System.out.println("update error");
+//     for (String s : updateMap.keySet()) {
+//         System.out.println(s + " " + updateMap.get(s));
+//     }
+//     System.exit(0);
+// }
 
                     List<Row> newRows = new ArrayList<>();
                     if (colData.containsKey(columnNoToUpdate.get(colNo))) {
@@ -175,26 +179,26 @@ try {
         for (Row row : rows) {
             Object[] rowData = row.getDataRow();
             for (int i = 0; i < columns.length; i++) {
-                if (columns[i] instanceof TreeMapColumn) {
+                if (columns[i].getType() == 'n') {
                     TreeMap<Double, List<Row>> colData = ((TreeMapColumn) columns[i]).getValues();
 
-try {
-    colData.get((Double) rowData[i]).size();
-    // System.out.println("updated successfully");
-} catch (NullPointerException ex) {
-    System.out.println(conditions.toString());
-    System.out.println();
-    // for (Double d : colData.keySet()) System.out.println(d);
-    System.out.println();
-    System.out.println(colData.ceilingKey((Double) rowData[i]));
-    System.out.println(colData.floorKey((Double) rowData[i]));
-    System.out.println(colData.get((Double) rowData[i]));
-    System.out.println(rowData[i]);
-    System.out.println(columns[i].getName());
-    System.out.println(columns[i].getType());
-    System.out.println("delete error");
-    System.exit(0);
-}
+// try {
+//     colData.get((Double) rowData[i]).size();
+//     // System.out.println("updated successfully");
+// } catch (NullPointerException ex) {
+//     System.out.println(conditions.toString());
+//     System.out.println();
+//     // for (Double d : colData.keySet()) System.out.println(d);
+//     System.out.println();
+//     System.out.println(colData.ceilingKey((Double) rowData[i]));
+//     System.out.println(colData.floorKey((Double) rowData[i]));
+//     System.out.println(colData.get((Double) rowData[i]));
+//     System.out.println(rowData[i]);
+//     System.out.println(columns[i].getName());
+//     System.out.println(columns[i].getType());
+//     System.out.println("delete error");
+//     System.exit(0);
+// }
 
                     if (colData.get(rowData[i]).size() == 1) {
                         colData.remove(rowData[i]);
