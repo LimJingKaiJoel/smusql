@@ -110,7 +110,7 @@ public class Engine {
             if (table == null) {
                 return "ERROR: Table " + tableName + " does not exist";
             }
-            Map<String, Object> updateMap = new HashMap<>();
+            Map<String, String> updateMap = new HashMap<>();
             for (String update : updates.split("\\s*,\\s*")) {
                 String[] parts = update.split("\\s*=\\s*");
                 updateMap.put(parts[0], Helper.trimQuotes(parts[1]));

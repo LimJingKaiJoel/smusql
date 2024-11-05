@@ -57,7 +57,7 @@ public class TableArrayList extends AbstractTable {
         super.addRow(row);
     }
 
-    public int update(Map<String, Object> updateMap, WhereCondition conditions) {
+    public int update(Map<String, String> updateMap, WhereCondition conditions) {
         /*
          * • Example: UPDATE student SET age = 25 WHERE id = 1
          * • Example: UPDATE student SET deans_list = True WHERE gpa > 3.8 OR age = 201
@@ -106,14 +106,17 @@ public class TableArrayList extends AbstractTable {
          */
 
         // where processing
-        List<Row> rows = filterRows(conditions);
+        List<Row> filteredRows = filterRows(conditions);
 
         // idk if row needs an equal method that checks every value of its data to
         // match??
-        for (Row row : rows) {
+        for (Row row : filteredRows) {
+            for (AbstractColumn col : super.columns) {
+                col.removeRow(row.getDataRow()[columnNoMap.get(col.getName())].toString(), row);
+            }
             super.removeRow(row);
         }
-        return rows.size();
+        return filteredRows.size();
     }
 
     public String select(AbstractColumn[] cols, WhereCondition conditions) {

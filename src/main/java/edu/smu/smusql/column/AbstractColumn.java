@@ -4,7 +4,6 @@ import java.util.AbstractMap;
 
 import edu.smu.smusql.Row;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public abstract class AbstractColumn {
@@ -46,6 +45,8 @@ public abstract class AbstractColumn {
     public abstract void insertRow(String columnValue, Row row);
 
     public abstract List<Row> getRows(String operator, String value);
+
+    public abstract void removeRow(String columnValue, Row row);
 
     protected boolean evaluateCondition(String columnValue, String operator, String value) {
         if (operator.equals("=")) {
