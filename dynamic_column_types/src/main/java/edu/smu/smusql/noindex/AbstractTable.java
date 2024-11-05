@@ -77,21 +77,40 @@ public abstract class AbstractTable {
         Condition condition2 = conditions.getCondition2();
         String operator = conditions.getOperator();
 
-        // Get rows that match the first condition
-        List<Row> filteredRows = this.columns[columnNoMap.get(condition1.getColumnName())].getRows(condition1.getOperator(), condition1.getValue());
-
-        // If there is no second condition, return the rows that match the first condition
+        // If there is no second condition, handle single condition case
         if (condition2 == null) {
-            return filteredRows;
+            return this.columns[columnNoMap.get(condition1.getColumnName())]
+                    .getRows(condition1.getOperator(), condition1.getValue());
         }
 
-        // If operator is OR, return the rows that match either condition
+        // If both conditions are on the same column, handle as range query
+        if (condition1.getColumnName().equals(condition2.getColumnName())) {
+            AbstractColumn column = this.columns[columnNoMap.get(condition1.getColumnName())];
+            
+            if (operator.equals("AND")) {
+                // For AND, get intersection of both conditions directly from the column
+                return column.getRowsRange(condition1.getOperator(), condition1.getValue(), 
+                                    condition2.getOperator(), condition2.getValue());
+            } else {
+                // For OR, get union of both conditions
+                List<Row> rows1 = column.getRows(condition1.getOperator(), condition1.getValue());
+                List<Row> rows2 = column.getRows(condition2.getOperator(), condition2.getValue());
+                rows1.addAll(rows2);
+                return rows1;
+            }
+        }
+
+        // Handle conditions on different columns
+        List<Row> filteredRows = this.columns[columnNoMap.get(condition1.getColumnName())]
+                .getRows(condition1.getOperator(), condition1.getValue());
+
         if (operator.equals("OR")) {
-            filteredRows.addAll(this.columns[columnNoMap.get(condition2.getColumnName())].getRows(condition2.getOperator(), condition2.getValue()));
+            filteredRows.addAll(this.columns[columnNoMap.get(condition2.getColumnName())]
+                    .getRows(condition2.getOperator(), condition2.getValue()));
         } else {
-            // If operator is AND, return the rows that match both conditions
-            // Check if the rows in filteredRows pass the second condition
-            filteredRows.retainAll(this.columns[columnNoMap.get(condition2.getColumnName())].getRows(condition2.getOperator(), condition2.getValue()));
+            // AND operator
+            filteredRows.retainAll(this.columns[columnNoMap.get(condition2.getColumnName())]
+                    .getRows(condition2.getOperator(), condition2.getValue()));
         }
 
         return filteredRows;

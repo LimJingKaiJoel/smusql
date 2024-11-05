@@ -68,13 +68,44 @@ public class TreeMapColumn extends AbstractColumn {
                     }
                 });
             }
-    
+
             return result;
         } catch (NumberFormatException ex) {
             System.out.println("Where condition is expecting a numeric");
             return new ArrayList<>();
         }
-        
+
+    }
+
+    public List<Row> getRowsRange(String operator1, Object value1, String operator2, Object value2) {
+        Double value1Double = Double.parseDouble((String) value1);
+        Double value2Double = Double.parseDouble((String) value2);
+
+        if ((operator1.equals("<") || operator1.equals("<=")) && operator2.equals(">") || operator2.equals(">=")) {
+            // swap the values and operators
+            Double temp = value1Double;
+            value1Double = value2Double;
+            value2Double = temp;
+            String tempOperator = operator1;
+            operator1 = operator2;
+            operator2 = tempOperator;
+        }
+
+        List<Row> result = new ArrayList<>();
+
+        if (operator1.equals("=") && operator2.equals("=")) {
+            if (!this.values.containsKey(value1Double) || !this.values.containsKey(value2Double)) {
+                return result;
+            }
+            result.addAll(this.values.get(value1Double));
+            result.retainAll(this.values.get(value2Double));
+        } else {
+            this.values.subMap(value1Double, operator1.equals("<="), value2Double, operator2.equals(">=")).forEach(
+                    (key, mapValue) -> {
+                        result.addAll(mapValue);
+                    });
+        }
+        return result;
     }
 
 }
