@@ -5,6 +5,7 @@ import java.util.regex.*;
 
 // IMPORTANT: the package here determines which table we use 
 import edu.smu.smusql.noindex.TableArrayList;
+import edu.smu.smusql.noindex.TableArrayListHash;
 import edu.smu.smusql.column.AbstractColumn;
 import edu.smu.smusql.column.HashMapColumn;
 import edu.smu.smusql.noindex.AbstractTable;
@@ -46,6 +47,7 @@ public class Engine {
 
     protected AbstractTable createTable(String name, String[] columns) {
         // TODO: CHANGE THIS TABLE AS NEEDED
+        // return new TableArrayListHash(name, columns);
         return new TableArrayList(name, columns);
     }
 

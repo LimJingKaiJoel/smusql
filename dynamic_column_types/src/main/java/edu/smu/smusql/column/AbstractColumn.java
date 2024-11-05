@@ -49,26 +49,32 @@ public abstract class AbstractColumn {
 
     protected boolean evaluateCondition(Object columnValue, String operator, Object value) {
         if (operator.equals("=")) {
-            return ((String) columnValue).equals((String) value);
+            return (columnValue).equals(value);
         } else if (operator.equals("!=")) {
-            return !((String) columnValue).equals((String) value);
+            return !(columnValue).equals(value);
         }
 
-        Double columnValueDouble = (Double) columnValue;
-        Double valueDouble = (Double) value;
-
-        switch (operator) {
-            case ">":
-                return columnValueDouble > valueDouble;
-            case ">=":
-                return columnValueDouble >= valueDouble;
-            case "<":
-                return columnValueDouble < valueDouble;
-            case "<=":
-                return columnValueDouble <= valueDouble;
-            // case "!=":
-            //     return !columnValue.equals(value);
+        
+        try {
+            Double columnValueDouble = (Double) columnValue;
+            Double valueDouble = Double.parseDouble(value.toString());
+            switch (operator) {
+                case ">":
+                    return columnValueDouble > valueDouble;
+                case ">=":
+                    return columnValueDouble >= valueDouble;
+                case "<":
+                    return columnValueDouble < valueDouble;
+                case "<=":
+                    return columnValueDouble <= valueDouble;
+                // case "!=":
+                //     return !columnValue.equals(value);
+            }
+        } catch (Exception e) {
+            return false;
         }
+
+        
         return false;
     }
 }
