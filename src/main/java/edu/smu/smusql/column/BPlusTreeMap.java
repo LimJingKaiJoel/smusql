@@ -5,13 +5,14 @@ import java.util.*;
 public class BPlusTreeMap<K extends Comparable<K>, V> extends AbstractMap<K, V> implements SortedMap<K, V> {
     private BPlusTreeNode root;
     private final int order;
+    private final Comparator<? super K> comparator;
 
     // B+ Tree Node class to represent internal and leaf nodes
     private class BPlusTreeNode {
         boolean isLeaf;
         List<K> keys;
         List<BPlusTreeNode> children;
-        List<V> values;  // Stores values if the node is a leaf
+        List<V> values;
         BPlusTreeNode next;
 
         BPlusTreeNode(boolean isLeaf) {
@@ -23,21 +24,36 @@ public class BPlusTreeMap<K extends Comparable<K>, V> extends AbstractMap<K, V> 
         }
     }
 
-    // Constructor to initialize the B+ Tree Map with a specified order
-    public BPlusTreeMap(int order) {
+    public BPlusTreeMap(int order, Comparator<? super K> comparator) {
         if (order < 3) {
             throw new IllegalArgumentException("Order must be at least 3");
         }
         this.root = new BPlusTreeNode(true);
         this.order = order;
+        this.comparator = comparator;
     }
 
-    // Find the appropriate leaf node for insertion
+    public BPlusTreeMap(int order) {
+        this(order, null);
+    }
+
+    private int compare(K k1, K k2) {
+        if (comparator != null) {
+            return comparator.compare(k1, k2);
+        }
+        return k1.compareTo(k2);
+    }
+
+    @Override
+    public Comparator<? super K> comparator() {
+        return comparator;
+    }
+
     private BPlusTreeNode findLeaf(K key) {
         BPlusTreeNode node = root;
         while (!node.isLeaf) {
             int i = 0;
-            while (i < node.keys.size() && key.compareTo(node.keys.get(i)) >= 0) {
+            while (i < node.keys.size() && compare(key, node.keys.get(i)) >= 0) {
                 i++;
             }
             node = node.children.get(i);
@@ -45,45 +61,58 @@ public class BPlusTreeMap<K extends Comparable<K>, V> extends AbstractMap<K, V> 
         return node;
     }
 
-    // Insert a key-value pair into the B+ Tree Map
     public V put(K key, V value) {
         BPlusTreeNode leaf = findLeaf(key);
-        int pos = Collections.binarySearch(leaf.keys, key);
+        int pos = findPosition(leaf.keys, key);
 
-        if (pos >= 0) {  // Key already exists, update the value
+        if (pos >= 0) {
             V oldValue = leaf.values.set(pos, value);
             return oldValue;
         }
 
-        pos = -(pos + 1);  // Position where the key should be inserted
+        pos = -(pos + 1);
         leaf.keys.add(pos, key);
         leaf.values.add(pos, value);
 
-        // Split the leaf node if it exceeds the order
         if (leaf.keys.size() > order - 1) {
             splitLeaf(leaf);
         }
         return null;
     }
 
+    private int findPosition(List<K> keys, K key) {
+        int low = 0;
+        int high = keys.size() - 1;
+
+        while (low <= high) {
+            int mid = (low + high) >>> 1;
+            int cmp = compare(keys.get(mid), key);
+
+            if (cmp < 0)
+                low = mid + 1;
+            else if (cmp > 0)
+                high = mid - 1;
+            else
+                return mid;
+        }
+        return -(low + 1);
+    }
+
     private void splitLeaf(BPlusTreeNode leaf) {
         BPlusTreeNode newLeaf = new BPlusTreeNode(true);
         int mid = (leaf.keys.size()) / 2;
-        
-        // Copy second half to new leaf
+
         newLeaf.keys.addAll(leaf.keys.subList(mid, leaf.keys.size()));
         newLeaf.values.addAll(leaf.values.subList(mid, leaf.values.size()));
-        
-        // Remove second half from original leaf
+
         leaf.keys.subList(mid, leaf.keys.size()).clear();
         leaf.values.subList(mid, leaf.values.size()).clear();
-        
-        // Link the leaves
+
         newLeaf.next = leaf.next;
         leaf.next = newLeaf;
-        
-        K splitKey = newLeaf.keys.get(0); // Use first key of new leaf as split key
-        
+
+        K splitKey = newLeaf.keys.get(0);
+
         if (leaf == root) {
             BPlusTreeNode newRoot = new BPlusTreeNode(false);
             newRoot.keys.add(splitKey);
@@ -94,10 +123,10 @@ public class BPlusTreeMap<K extends Comparable<K>, V> extends AbstractMap<K, V> 
             insertIntoParent(leaf, splitKey, newLeaf);
         }
     }
-    
+
     private void insertIntoParent(BPlusTreeNode left, K key, BPlusTreeNode right) {
         BPlusTreeNode parent = findParent(root, left);
-        
+
         if (parent == null) {
             BPlusTreeNode newRoot = new BPlusTreeNode(false);
             newRoot.keys.add(key);
@@ -106,33 +135,31 @@ public class BPlusTreeMap<K extends Comparable<K>, V> extends AbstractMap<K, V> 
             root = newRoot;
             return;
         }
-        
+
         int insertPos = 0;
-        while (insertPos < parent.keys.size() && parent.keys.get(insertPos).compareTo(key) < 0) {
+        while (insertPos < parent.keys.size() && compare(parent.keys.get(insertPos), key) < 0) {
             insertPos++;
         }
-        
+
         parent.keys.add(insertPos, key);
         parent.children.add(insertPos + 1, right);
-        
+
         if (parent.keys.size() > order - 1) {
             splitInternal(parent);
         }
     }
-    
+
     private void splitInternal(BPlusTreeNode internal) {
         BPlusTreeNode newInternal = new BPlusTreeNode(false);
-        int mid = (internal.keys.size()) / 2;
+        int mid = (internal.keys.size() - 1) / 2;
         K midKey = internal.keys.get(mid);
-        
-        // Copy keys and children after mid to new node
+
         newInternal.keys.addAll(internal.keys.subList(mid + 1, internal.keys.size()));
         newInternal.children.addAll(internal.children.subList(mid + 1, internal.children.size()));
-        
-        // Remove them from original node
+
         internal.keys.subList(mid, internal.keys.size()).clear();
         internal.children.subList(mid + 1, internal.children.size()).clear();
-        
+
         if (internal == root) {
             BPlusTreeNode newRoot = new BPlusTreeNode(false);
             newRoot.keys.add(midKey);
@@ -143,29 +170,28 @@ public class BPlusTreeMap<K extends Comparable<K>, V> extends AbstractMap<K, V> 
             insertIntoParent(internal, midKey, newInternal);
         }
     }
-    
+
     private BPlusTreeNode findParent(BPlusTreeNode current, BPlusTreeNode target) {
-        if (current.isLeaf) {
+        if (current == null || current.isLeaf) {
             return null;
         }
-        
+
         if (current.children.contains(target)) {
             return current;
         }
-        
+
         for (BPlusTreeNode child : current.children) {
-            if (!child.isLeaf) {
-                BPlusTreeNode result = findParent(child, target);
-                if (result != null) {
-                    return result;
-                }
+            BPlusTreeNode result = findParent(child, target);
+            if (result != null) {
+                return result;
             }
         }
         return null;
     }
+
     public V get(Object key) {
         BPlusTreeNode leaf = findLeaf((K) key);
-        int pos = Collections.binarySearch(leaf.keys, (K) key);
+        int pos = Collections.binarySearch(leaf.keys, (K) key, comparator);
         return pos >= 0 ? leaf.values.get(pos) : null;
     }
 
@@ -192,11 +218,6 @@ public class BPlusTreeMap<K extends Comparable<K>, V> extends AbstractMap<K, V> 
             node = node.children.get(0);
         }
         return node;
-    }
-
-    @Override
-    public Comparator<? super K> comparator() {
-        return null; // Natural ordering
     }
 
     //not implemented
@@ -307,8 +328,8 @@ public class BPlusTreeMap<K extends Comparable<K>, V> extends AbstractMap<K, V> 
             while (node != null) {
                 for (int i = 0; i < node.keys.size(); i++) {
                     K key = node.keys.get(i);
-                    boolean fromKeyCondition = fromKey == null || (fromInclusive ? key.compareTo(fromKey) >= 0 : key.compareTo(fromKey) > 0);
-                    boolean toKeyCondition = toKey == null || (toInclusive ? key.compareTo(toKey) <= 0 : key.compareTo(toKey) < 0);
+                    boolean fromKeyCondition = fromKey == null || (fromInclusive ? compare(key, fromKey) >= 0 : compare(key, fromKey) > 0);
+                    boolean toKeyCondition = toKey == null || (toInclusive ? compare(key, toKey) <= 0 : compare(key, toKey) < 0);
                     if (fromKeyCondition && toKeyCondition) {
                         entries.add(new AbstractMap.SimpleEntry<>(key, node.values.get(i)));
                     }
@@ -342,13 +363,13 @@ public class BPlusTreeMap<K extends Comparable<K>, V> extends AbstractMap<K, V> 
             }
         }
     }
-    
 
     // testing
-    // javac -d bin src/main/java/edu/smu/smusql/column/BPlusTreeMap.java 
+    // javac -d bin src/main/java/edu/smu/smusql/column/BPlusTreeMap.java src/main/java/edu/smu/smusql/column/CustomTreeMapComparator.java 
     // java -cp bin edu.smu.smusql.column.BPlusTreeMap
     public static void main(String[] args) {
-        BPlusTreeMap<String, String> treeMap = new BPlusTreeMap<>(3);
+        // Use CustomTreeMapComparator for numeric and lexicographical ordering
+        BPlusTreeMap<String, String> treeMap = new BPlusTreeMap<>(3, new CustomComparator());
 
         // Insert some key-value pairs
         treeMap.put("b", "two");
@@ -361,7 +382,6 @@ public class BPlusTreeMap<K extends Comparable<K>, V> extends AbstractMap<K, V> 
         treeMap.put("j", "ten");
         treeMap.put("a", "one");
         treeMap.put("g", "seven");
-
 
         treeMap.printKeys();
         treeMap.printTree();

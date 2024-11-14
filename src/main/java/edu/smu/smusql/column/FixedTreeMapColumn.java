@@ -1,3 +1,4 @@
+
 package edu.smu.smusql.column;
 
 import java.util.ArrayList;
@@ -6,18 +7,17 @@ import java.util.TreeMap;
 
 import edu.smu.smusql.Row;
 
-public class TreeMapColumn extends AbstractColumn {
+public class FixedTreeMapColumn extends AbstractColumn {
     private TreeMap<String, List<Row>> values;
 
-    public TreeMapColumn(String name) {
+    public FixedTreeMapColumn(String name) {
         super(name);
         initValues();
     }
 
     @Override
     public void initValues() {
-        this.values = new TreeMap<>(new CustomComparator());
-        // this.values = new TreeMap<>();
+        this.values = new TreeMap<>();
     }
 
     @Override
