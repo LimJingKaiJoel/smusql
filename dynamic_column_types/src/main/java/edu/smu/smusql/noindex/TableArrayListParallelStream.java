@@ -2,6 +2,8 @@ package edu.smu.smusql.noindex;
 
 import java.util.*;
 import java.util.stream.IntStream;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import edu.smu.smusql.*;
 import edu.smu.smusql.column.AbstractColumn;
@@ -12,6 +14,17 @@ import edu.smu.smusql.utils.WhereCondition;
 
 public class TableArrayListParallelStream extends AbstractTable {
 
+    private static class RowUpdate {
+        Row row;
+        Object oldValue;
+        Object newValue;
+        RowUpdate(Row r, Object old, Object newVal) {
+            row = r;
+            oldValue = old;
+            newValue = newVal;
+        }
+    }
+
     // create a table with the fixed columns and empty arraylist of rows
     public TableArrayListParallelStream(String tableName, String[] colNames) {
         // CREATE TABLE student (id, name, age, gpa, deans_list)
@@ -19,14 +32,14 @@ public class TableArrayListParallelStream extends AbstractTable {
         AbstractColumn[] cols = new AbstractColumn[colNames.length];
         columnNoMap = new HashMap<>();
 
-        IntStream.range(0, cols.length).parallel().forEach(i -> {
+        for (int i = 0; i < cols.length; i++) {
             // TODO: Change COLUMN IMPL here
             cols[i] = new HashMapColumn(colNames[i]);
             if (colNames[i].equalsIgnoreCase("id") || colNames[i].contains("_id")) {
-                cols[i].setType('i'); // represents id
+                cols[i].setType('i'); // represents id 
             } // else will be default value of '0' undeclared
             columnNoMap.put(colNames[i], i);
-        });
+        }
 
         super.setColumns(cols);
         super.setRows(new ArrayList<Row>());
@@ -40,24 +53,24 @@ public class TableArrayListParallelStream extends AbstractTable {
                     + super.columns.length + " but got " + values.length);
         Row row = new Row(values.length);
         Object[] rowData = new Object[values.length];
-        IntStream.range(0, values.length).parallel().forEach(i -> {
+        for (int i = 0; i < values.length; i++) {
             AbstractColumn col = super.columns[i];
-            rowData[i] = values[i];
-            char type = col.getType();
+            rowData[i] = values[i]; 
+            char type = col.getType(); 
             if (type == '0' || type == 'n') {
                 try {
-                    double val = Double.parseDouble(values[i]);
-                    rowData[i] = val;
-                    col.setType('n'); // numeric
+                    double val = Double.parseDouble(values[i]); 
+                    rowData[i] = val; 
+                    col.setType('n'); // numeric 
                 } catch (NumberFormatException ex) {
-                    col.setType('s'); // string
-                    rowData[i] = values[i];
+                    col.setType('s'); // string 
+                    rowData[i] = values[i]; 
                 }
             } else {
                 col.setType('s');
-                rowData[i] = values[i];
+                rowData[i] = values[i]; 
             }
-        });
+        }
         row.setDataRow(rowData);
         for (int i = 0; i < values.length; i++) {
             AbstractColumn col = super.columns[i];
@@ -71,7 +84,7 @@ public class TableArrayListParallelStream extends AbstractTable {
             } else {
                 ((HashMapColumn) col).insertRow((String) rowData[columnNoMap.get(col.getName())], row);
             }
-
+            
         }
         super.addRow(row);
     }
@@ -88,10 +101,8 @@ public class TableArrayListParallelStream extends AbstractTable {
 
         Map<Integer, Object> columnNoToUpdate = new HashMap<>(); // column no, new data
 
-        // Convert Set to Array/List for parallel processing
-        String[] columnNamesArray = updateMap.keySet().toArray(new String[0]);
-        IntStream.range(0, columnNamesArray.length).parallel().forEach(i -> {
-            String columnName = columnNamesArray[i];
+        Set<String> columnNames = updateMap.keySet();
+        for (String columnName : columnNames) {
 
             if (columnNoMap.get(columnName) != null) {
 
@@ -106,84 +117,111 @@ public class TableArrayListParallelStream extends AbstractTable {
                 } else { // string or id
                     columnNoToUpdate.put(columnNoMap.get(columnName), updateMap.get(columnName));
                 }
-
+                
             } else {
                 System.out.println(columnName + " does not exist in the table.");
+                return 0;
             }
-        });
+        }
 
         // updating column data and row data
-        rows.parallelStream().forEach(row -> {
+        for (Row row : rows) {
             Object[] rowData = row.getDataRow();
 
-            columnNoToUpdate.keySet().parallelStream().forEach(colNo -> {
-                AbstractColumn col = columns[colNo];
+            for (Integer colNo : columnNoToUpdate.keySet()) {
+                AbstractColumn col = columns[colNo]; 
 
-                if (col.getType() == 'n') {
+                if (col.getType() == 'n') { // update numeric column
                     TreeMap<Double, List<Row>> colData = ((TreeMapColumn) col).getValues();
-                    synchronized (colData) {
-                        colData.get(rowData[colNo]).remove(row);
-                        List<Row> newRows = new ArrayList<>();
-                        if (colData.containsKey(columnNoToUpdate.get(colNo))) {
-                            newRows = colData.get(columnNoToUpdate.get(colNo));
-                        }
-                        newRows.add(row);
-                        colData.put((Double) columnNoToUpdate.get(colNo), newRows);
+                    colData.get(rowData[colNo]).remove(row); 
+
+                    List<Row> newRows = new ArrayList<>();
+                    if (colData.containsKey(columnNoToUpdate.get(colNo))) {
+                        newRows = colData.get(columnNoToUpdate.get(colNo));
                     }
-                } else {
+                    newRows.add(row);
+                    colData.put((Double) columnNoToUpdate.get(colNo), newRows);
+
+                } else { // update string column
                     HashMap<String, List<Row>> colData = ((HashMapColumn) col).getValues();
-                    synchronized (colData) {
-                        colData.get(rowData[colNo]).remove(row);
-                        List<Row> newRows = new ArrayList<>();
-                        if (colData.containsKey(columnNoToUpdate.get(colNo))) {
-                            newRows = colData.get(columnNoToUpdate.get(colNo));
-                        }
-                        newRows.add(row);
-                        colData.put((String) columnNoToUpdate.get(colNo), rows);
+                    System.out.println(rowData[colNo]);
+                    System.out.println(colData.get(rowData[colNo]));
+                    colData.get(rowData[colNo]).remove(row); 
+                    List<Row> newRows = new ArrayList<>();
+                    if (colData.containsKey(columnNoToUpdate.get(colNo))) {
+                        newRows = colData.get(columnNoToUpdate.get(colNo));
                     }
+                    newRows.add(row);
+                    colData.put((String) columnNoToUpdate.get(colNo), rows);
                 }
+
+
                 rowData[colNo] = columnNoToUpdate.get(colNo);
-            });
+            }
             row.setDataRow(rowData);
-        });
+        }
         return rows.size();
     }
 
     public int delete(WhereCondition conditions) {
-        // where processing
         List<Row> rows = filterRows(conditions);
         
-        // First update the columns
+        // Create a map to collect deletions per column
+        Map<AbstractColumn, Map<Object, List<Row>>> batchDeletes = new ConcurrentHashMap<>();
+        
+        // Collect all deletions first
         rows.parallelStream().forEach(row -> {
             Object[] rowData = row.getDataRow();
-            IntStream.range(0, columns.length).parallel().forEach(i -> {
-                if (columns[i].getType() == 'n') {
-                    TreeMap<Double, List<Row>> colData = ((TreeMapColumn) columns[i]).getValues();
-                    synchronized (colData) {
-                        if (colData.get(rowData[i]).size() == 1) {
-                            colData.remove(rowData[i]);
-                        } else {
-                            colData.get(rowData[i]).remove(row);
-                        }
-                    }
-                } else {
-                    HashMap<String, List<Row>> colData = ((HashMapColumn) columns[i]).getValues();
-                    synchronized (colData) {
-                        if (colData.get(rowData[i]).size() == 1) {
-                            colData.remove(rowData[i]);
-                        } else {
-                            colData.get(rowData[i]).remove(row);
-                        }
-                    }
-                }
+            
+            // For each column, group the rows that need to be deleted
+            IntStream.range(0, columns.length).forEach(i -> {
+                AbstractColumn col = columns[i];
+                Object value = rowData[i];
+                
+                batchDeletes.computeIfAbsent(col, k -> new ConcurrentHashMap<>())
+                            .computeIfAbsent(value, k -> new CopyOnWriteArrayList<>())
+                            .add(row);
             });
         });
-
-        // Then remove all rows at once using removeAll
+        
+        // Process deletions in batch per column
+        batchDeletes.forEach((col, valueMap) -> {
+            if (col.getType() == 'n') {
+                TreeMap<Double, List<Row>> colData = ((TreeMapColumn) col).getValues();
+                synchronized (colData) {
+                    valueMap.forEach((value, rowsToDelete) -> {
+                        List<Row> existingRows = colData.get(value);
+                        if (existingRows != null) {
+                            if (existingRows.size() == rowsToDelete.size()) {
+                                colData.remove(value);
+                            } else {
+                                existingRows.removeAll(rowsToDelete);
+                            }
+                        }
+                    });
+                }
+            } else {
+                HashMap<String, List<Row>> colData = ((HashMapColumn) col).getValues();
+                synchronized (colData) {
+                    valueMap.forEach((value, rowsToDelete) -> {
+                        List<Row> existingRows = colData.get(value);
+                        if (existingRows != null) {
+                            if (existingRows.size() == rowsToDelete.size()) {
+                                colData.remove(value);
+                            } else {
+                                existingRows.removeAll(rowsToDelete);
+                            }
+                        }
+                    });
+                }
+            }
+        });
+        
+        // Remove all rows at once
         synchronized(this) {
             super.getRows().removeAll(rows);
         }
-
+        
         return rows.size();
     }
 
