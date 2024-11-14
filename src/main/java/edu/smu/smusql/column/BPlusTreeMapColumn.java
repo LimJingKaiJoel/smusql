@@ -24,7 +24,8 @@ public class BPlusTreeMapColumn extends AbstractColumn {
     @Override
     public void initValues() {
         // Change the order here for testing around - order >= 3
-        this.values = new BPlusTreeMap<String, List<Row>>(3);
+        this.values = new BPlusTreeMap<String, List<Row>>(3, new CustomComparator());
+        // this.values = new BPlusTreeMap<String, List<Row>>(3);
     }
 
     public void initValues(int order) {
@@ -39,6 +40,18 @@ public class BPlusTreeMapColumn extends AbstractColumn {
         }
         rows.add(row);
         this.values.put(columnValue, rows);
+    }
+
+    @Override
+    public void removeRow(String columnValue, Row row) {
+        List<Row> rows = this.values.get(columnValue);
+        if (rows != null) {
+            if (rows.size() == 1) {
+                this.values.remove(columnValue);
+            } else {
+                rows.remove(row);
+            }
+        }
     }
 
     @Override

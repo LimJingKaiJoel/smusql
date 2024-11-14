@@ -16,13 +16,26 @@ public class SkipListColumn extends AbstractColumn {
 
     @Override
     public void initValues() {
-        this.values = new ConcurrentSkipListMap<>();
+        this.values = new ConcurrentSkipListMap<>(new CustomComparator());
+        // this.values = new ConcurrentSkipListMap<>();
     }
 
     @Override
     public void insertRow(String columnValue, Row row) {
         this.values.computeIfAbsent(columnValue, k -> new ArrayList<>()).add(row);
-    };
+    }
+
+    @Override
+    public void removeRow(String columnValue, Row row) {
+        List<Row> rows = this.values.get(columnValue);
+        if (rows != null) {
+            if (rows.size() == 1) {
+                this.values.remove(columnValue);
+            } else {
+                rows.remove(row);
+            }
+        }
+    }
 
     @Override
     public List<Row> getRows(String operator, String value) {

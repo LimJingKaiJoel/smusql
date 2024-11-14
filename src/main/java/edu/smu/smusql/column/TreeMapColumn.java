@@ -16,7 +16,8 @@ public class TreeMapColumn extends AbstractColumn {
 
     @Override
     public void initValues() {
-        this.values = new TreeMap<>();
+        this.values = new TreeMap<>(new CustomComparator());
+        // this.values = new TreeMap<>();
     }
 
     @Override
