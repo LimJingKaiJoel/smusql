@@ -5,10 +5,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import edu.smu.smusql.Row;
 import edu.smu.smusql.column.AbstractColumn;
-import edu.smu.smusql.column.BPlusTreeMapColumn;
+import edu.smu.smusql.column.*;
 import edu.smu.smusql.utils.WhereCondition;
 
 public class Table extends AbstractTable {
@@ -22,7 +23,7 @@ public class Table extends AbstractTable {
 
         for (int i = 0; i < cols.length; i++) {
             // TODO: Change COLUMN IMPL here
-            cols[i] = new BPlusTreeMapColumn(colNames[i]);
+            cols[i] = new TreeMapColumn(colNames[i]);
             columnNoMap.put(colNames[i], i);
         }
 

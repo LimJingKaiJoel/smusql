@@ -77,4 +77,35 @@ public class TreeMapColumn extends AbstractColumn {
 
         return result;
     }
+
+    public List<Row> getRowsRange(String operator1, Object value1, String operator2, Object value2) {
+        String value1String = value1.toString();
+        String value2String = value2.toString();
+
+        if ((operator1.equals("<") || operator1.equals("<=")) && operator2.equals(">") || operator2.equals(">=")) {
+            // swap the values and operators
+            String temp = value1String;
+            value1String = value2String;
+            value2String = temp;
+            String tempOperator = operator1;
+            operator1 = operator2;
+            operator2 = tempOperator;
+        }
+
+        List<Row> result = new ArrayList<>();
+
+        if (operator1.equals("=") && operator2.equals("=")) {
+            if (!this.values.containsKey(value1String) || !this.values.containsKey(value2String)) {
+                return result;
+            }
+            result.addAll(this.values.get(value1String));
+            result.retainAll(this.values.get(value2String));
+        } else {
+            this.values.subMap(value1String, operator1.equals("<="), value2String, operator2.equals(">=")).forEach(
+                    (key, mapValue) -> {
+                        result.addAll(mapValue);
+                    });
+        }
+        return result;
+    }
 }
