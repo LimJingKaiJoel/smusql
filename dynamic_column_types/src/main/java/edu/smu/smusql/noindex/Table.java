@@ -120,25 +120,6 @@ public class Table extends AbstractTable {
                 if (col.getType() == 'n') { // update numeric column
                     TreeMap<Double, List<Row>> colData = ((TreeMapColumn) col).getValues();
                     colData.get(rowData[colNo]).remove(row); 
-                    
-// try {
-//                         colData.get(rowData[colNo]).remove(row); 
-// } catch (NullPointerException ex) {
-//     System.out.println(conditions.toString());
-//     System.out.println();
-//     System.out.println(colData.ceilingKey((Double) rowData[colNo]));
-//     System.out.println(colData.floorKey((Double) rowData[colNo]));
-//     System.out.println(colData.get((Double) rowData[colNo]));
-//     System.out.println(rowData[colNo]);
-//     System.out.println(col.getName());
-//     System.out.println(col.getType());
-//     System.out.println("update error");
-//     for (String s : updateMap.keySet()) {
-//         System.out.println(s + " " + updateMap.get(s));
-//     }
-//     System.exit(0);
-// }
-
                     List<Row> newRows = new ArrayList<>();
                     if (colData.containsKey(columnNoToUpdate.get(colNo))) {
                         newRows = colData.get(columnNoToUpdate.get(colNo));

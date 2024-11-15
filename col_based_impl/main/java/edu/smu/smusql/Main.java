@@ -315,7 +315,8 @@ public class Main {
             default:
                 complexSelectQuery = "SELECT * FROM users";
         }
-        dbEngine.executeSQL(complexSelectQuery);
+        System.out.println(complexSelectQuery);
+        System.out.println(dbEngine.executeSQL(complexSelectQuery));
     }
 
     // Helper method to execute a complex UPDATE query with WHERE

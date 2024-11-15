@@ -5,11 +5,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
+import java.util.Arrays;
 import edu.smu.smusql.Row;
 import edu.smu.smusql.column.AbstractColumn;
-import edu.smu.smusql.column.BPlusTreeMapColumn;
+import edu.smu.smusql.column.TreeMapColumn;
 import edu.smu.smusql.utils.WhereCondition;
+import java.util.AbstractMap;
 
 public class Table extends AbstractTable {
 
@@ -22,7 +23,7 @@ public class Table extends AbstractTable {
 
         for (int i = 0; i < cols.length; i++) {
             // TODO: Change COLUMN IMPL here
-            cols[i] = new BPlusTreeMapColumn(colNames[i]);
+            cols[i] = new TreeMapColumn(colNames[i]);
             columnNoMap.put(colNames[i], i);
         }
 
@@ -82,17 +83,19 @@ public class Table extends AbstractTable {
         for (Row row : rows) {
             Object[] rowData = row.getDataRow();
             for (Integer colNo : columnNoToUpdate.keySet()) {
+                AbstractColumn col = columns[colNo];
+                AbstractMap<String, List<Row>> colData = col.getValues();
+
+                colData.get(rowData[colNo].toString()).remove(row);
+                List<Row> newRows = new ArrayList<>();
+                if (colData.containsKey(columnNoToUpdate.get(colNo))) {
+                    newRows = colData.get(columnNoToUpdate.get(colNo));
+                }
+                newRows.add(row);
+                colData.put((String) columnNoToUpdate.get(colNo), newRows);
                 rowData[colNo] = columnNoToUpdate.get(colNo);
-                // if (colType == 'b') { // boolean
-                // rowData[colNo] = Boolean.parseBoolean(newVal);
-                // } else if (colType == 'i') { // integer
-                // rowData[colNo] = Integer.parseInt(newVal);
-                // } else if (colType == 'd') { // double
-                // rowData[colNo] = Double.parseDouble(newVal);
-                // } else { // string
-                // rowData[colNo] = newVal;
-                // }
             }
+
             row.setDataRow(rowData);
         }
         return rows.size();
