@@ -1,10 +1,13 @@
 package edu.smu.smusql;
 
 import java.util.*;
+import java.lang.Runtime;
 
 // @author ziyuanliu@smu.edu.sg
 
 public class Main {
+    static boolean calculateTime = true;
+    static boolean calculateMemory = true;
     /*
      * Main method for accessing the command line interface of the database engine.
      * MODIFICATION OF THIS FILE IS NOT RECOMMENDED!
@@ -22,7 +25,8 @@ public class Main {
 
         // dbEngine.executeSQL("CREATE TABLE users (id, name, age, city)");
         // dbEngine.executeSQL("INSERT INTO users VALUES (1, 'Alice', 25, 'New York')");
-        // dbEngine.executeSQL("INSERT INTO users VALUES (2, 'Bob', 30, 'Los Angeles')");
+        // dbEngine.executeSQL("INSERT INTO users VALUES (2, 'Bob', 30, 'Los
+        // Angeles')");
 
         // System.out.println("You should see both rows");
         // System.out.println(dbEngine.executeSQL("SELECT * FROM users"));
@@ -31,20 +35,24 @@ public class Main {
         // System.out.println(dbEngine.executeSQL("SELECT name FROM users"));
 
         // System.out.println("You should see 'Alice', 25");
-        // System.out.println(dbEngine.executeSQL("SELECT name, age FROM users WHERE id = 1"));
+        // System.out.println(dbEngine.executeSQL("SELECT name, age FROM users WHERE id
+        // = 1"));
 
         // System.out.println("You should see 1, 'Alice', 25, 'New York'");
         // System.out.println(dbEngine.executeSQL("SELECT * FROM users WHERE id = 1"));
 
         // System.out.println("You should see both rows");
-        // System.out.println(dbEngine.executeSQL("SELECT * FROM users WHERE id = 1 OR name = 'Bob"));
+        // System.out.println(dbEngine.executeSQL("SELECT * FROM users WHERE id = 1 OR
+        // name = 'Bob"));
 
-        // dbEngine.executeSQL("UPDATE users SET age = 31 WHERE city = 'Los Angeles' OR id = 1");
+        // dbEngine.executeSQL("UPDATE users SET age = 31 WHERE city = 'Los Angeles' OR
+        // id = 1");
 
         // System.out.println("You should see both rows but age is 31");
         // System.out.println(dbEngine.executeSQL("SELECT * FROM users"));
 
-        // dbEngine.executeSQL("UPDATE users SET age = 55 WHERE id = 1 AND city = 'New York'");
+        // dbEngine.executeSQL("UPDATE users SET age = 55 WHERE id = 1 AND city = 'New
+        // York'");
 
         // System.out.println("You should see both rows but Alice age is 55");
         // System.out.println(dbEngine.executeSQL("SELECT * FROM users"));
@@ -79,9 +87,13 @@ public class Main {
     public static void autoEvaluate() {
 
         long startTime = System.nanoTime();
+        Runtime runtime = null;
+        if (calculateMemory) {
+            runtime = Runtime.getRuntime();
+        }
 
         // Set the number of queries to execute
-        int numberOfQueries = 100000;
+        int numberOfQueries = 10000;
 
         // Create tables
         dbEngine.executeSQL("CREATE TABLE users (id, name, age, city)");
@@ -94,13 +106,22 @@ public class Main {
         // Prepopulate the tables in preparation for evaluation
         prepopulateTables(random);
 
-        long queryStartTime;
-
         Map<Integer, ArrayList<Double>> queryTimes = new HashMap<>();
+        Map<Integer, ArrayList<Long>> queryMemoryUsage = new HashMap<>();
 
+        long queryStartTime = 0;
+        long memoryBefore = 0;
         // Loop to simulate millions of queries
         for (int i = 0; i < numberOfQueries; i++) {
-            queryStartTime = System.nanoTime();
+            if (calculateMemory) {
+                System.gc();
+                memoryBefore = runtime.totalMemory() - runtime.freeMemory();
+            }
+
+            if (calculateTime) {
+                queryStartTime = System.nanoTime();
+            }
+
             int queryType = random.nextInt(6); // Randomly choose the type of query to execute
 
             switch (queryType) {
@@ -124,9 +145,19 @@ public class Main {
                     break;
             }
 
-            long queryElapsedTime = System.nanoTime() - queryStartTime;
-            double queryElapsedTimeInSecond = (double) queryElapsedTime / 1_000_000_000;
-            queryTimes.computeIfAbsent(queryType, k -> new ArrayList<>()).add(queryElapsedTimeInSecond);
+            if (calculateMemory) {
+                // Memory measurement after query
+                System.gc(); // Request garbage collection for more accurate measurement
+                long memoryAfter = runtime.totalMemory() - runtime.freeMemory();
+                long memoryUsed = Math.abs(memoryAfter - memoryBefore);
+                queryMemoryUsage.computeIfAbsent(queryType, k -> new ArrayList<>()).add(memoryUsed);
+            }
+
+            if (calculateTime) {
+                long queryElapsedTime = System.nanoTime() - queryStartTime;
+                double queryElapsedTimeInSecond = (double) queryElapsedTime / 1_000_000_000;
+                queryTimes.computeIfAbsent(queryType, k -> new ArrayList<>()).add(queryElapsedTimeInSecond);
+            }
 
             // Print progress every 100,000 queries
             if (i % 10000 == 0) {
@@ -148,11 +179,25 @@ public class Main {
         System.out.println("Queries per second: " + numberOfQueries / elapsedTimeInSecond);
         System.out.println("Average query time: " + String.format("%.5f", elapsedTimeInSecond / numberOfQueries * 1000)
                 + " milliseconds");
-        queryTimes.forEach((key, value) -> {
-            System.out.println("Query type " + key + " took "
-                    + String.format("%.5f", value.stream().mapToDouble(Double::doubleValue).average().orElse(0) * 1000)
-                    + " milliseconds on average, for " + value.size() + " queries");
-        });
+        if (calculateTime) {
+            queryTimes.forEach((key, value) -> {
+                System.out.println("Query type " + key + " took "
+                        + String.format("%.5f",
+                                value.stream().mapToDouble(Double::doubleValue).average().orElse(0) * 1000)
+                        + " milliseconds on average, for " + value.size() + " queries");
+            });
+        }
+
+        if (calculateMemory) {
+            // Add memory usage metrics
+            System.out.println("\nMemory Usage Metrics:");
+            queryMemoryUsage.forEach((key, value) -> {
+                double avgMemoryUsage = value.stream().mapToLong(Long::longValue).average().orElse(0);
+                System.out.println("Query type " + key + " used " +
+                        String.format("%.2f", avgMemoryUsage / 1024.0 / 1024.0) +
+                        " MB on average, for " + value.size() + " queries");
+            });
+        }
 
     }
 
