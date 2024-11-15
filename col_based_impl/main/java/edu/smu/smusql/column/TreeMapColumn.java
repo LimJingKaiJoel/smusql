@@ -52,11 +52,11 @@ public class TreeMapColumn extends AbstractColumn {
             }
             result.addAll(this.values.get(value));
         } else if (operator.equals(">")) {
-            this.values.tailMap(value).forEach((key, mapValue) -> {
+            this.values.tailMap(value, false).forEach((key, mapValue) -> {
                 result.addAll(mapValue);
             });
         } else if (operator.equals("<")) {
-            this.values.headMap(value).forEach((key, mapValue) -> {
+            this.values.headMap(value, false).forEach((key, mapValue) -> {
                 result.addAll(mapValue);
             });
         } else if (operator.equals(">=")) {
