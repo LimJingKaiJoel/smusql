@@ -1,21 +1,24 @@
 package edu.smu.smusql.noindex;
 
-import edu.smu.smusql.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.*;
-
-import static org.junit.jupiter.api.Assertions.*;
+import edu.smu.smusql.Row;
 
 class TableArrayListTest {
 
-    private TableArrayList table;
+    private Table table;
 
     @BeforeEach
     void setUp() {
         String[] columns = {"id", "name", "age", "gpa", "deans_list"};
-        table = new TableArrayList("student", columns);
+        table = new Table("student", columns);
 
         // Insert sample data into the table
         table.insert(new String[]{"1", "Alice", "20", "3.9", "true"});

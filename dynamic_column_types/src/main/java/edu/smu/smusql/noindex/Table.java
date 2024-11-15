@@ -9,10 +9,10 @@ import edu.smu.smusql.column.HashMapColumn;
 
 import edu.smu.smusql.utils.WhereCondition;
 
-public class TableArrayList extends AbstractTable {
+public class Table extends AbstractTable {
 
     // create a table with the fixed columns and empty arraylist of rows
-    public TableArrayList(String tableName, String[] colNames) {
+    public Table(String tableName, String[] colNames) {
         // CREATE TABLE student (id, name, age, gpa, deans_list)
         super(tableName);
         AbstractColumn[] cols = new AbstractColumn[colNames.length];

@@ -1,21 +1,20 @@
 package edu.smu.smusql.noindex;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import edu.smu.smusql.*;
+import edu.smu.smusql.Row;
 import edu.smu.smusql.column.AbstractColumn;
 import edu.smu.smusql.column.BPlusTreeMapColumn;
-import edu.smu.smusql.column.TreeMapColumn;
-import edu.smu.smusql.column.HashMapColumn;
-import edu.smu.smusql.column.SkipListColumn;
-import edu.smu.smusql.column.CustomHashMapColumn;
-
 import edu.smu.smusql.utils.WhereCondition;
 
-public class TableArrayList extends AbstractTable {
+public class Table extends AbstractTable {
 
     // create a table with the fixed columns and empty arraylist of rows
-    public TableArrayList(String tableName, String[] colNames) {
+    public Table(String tableName, String[] colNames) {
         // CREATE TABLE student (id, name, age, gpa, deans_list)
         super(tableName);
         AbstractColumn[] cols = new AbstractColumn[colNames.length];

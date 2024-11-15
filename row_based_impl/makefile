@@ -1,7 +1,7 @@
 # Makefile for SMU SQL
 
 # Define the source and output directories
-SRC_DIR := ./col_based_impl/main/java
+SRC_DIR := ./src/main/java
 OUT_DIR := ./out
 
 # Find all Java files recursively (silently)

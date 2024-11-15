@@ -1,13 +1,16 @@
 package edu.smu.smusql;
 
-import java.util.*;
-import java.util.regex.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-// IMPORTANT: the package here determines which table we use 
-import edu.smu.smusql.noindex.TableArrayList;
 import edu.smu.smusql.column.AbstractColumn;
 import edu.smu.smusql.column.HashMapColumn;
 import edu.smu.smusql.noindex.AbstractTable;
+// IMPORTANT: the package here determines which table we use 
+import edu.smu.smusql.noindex.Table;
 import edu.smu.smusql.utils.Condition;
 import edu.smu.smusql.utils.Helper;
 import edu.smu.smusql.utils.WhereCondition;
@@ -46,7 +49,7 @@ public class Engine {
 
     protected AbstractTable createTable(String name, String[] columns) {
         // TODO: CHANGE THIS TABLE AS NEEDED
-        return new TableArrayList(name, columns);
+        return new Table(name, columns);
     }
 
     public String create(String query) {
