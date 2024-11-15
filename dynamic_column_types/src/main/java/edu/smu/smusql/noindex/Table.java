@@ -29,7 +29,7 @@ public class Table extends AbstractTable {
 
         super.setColumns(cols);
         super.setRows(new ArrayList<Row>());
-        System.out.println(Arrays.toString(colNames));
+        // System.out.println(Arrays.toString(colNames));
     }
 
     public void insert(String[] values) {
@@ -129,8 +129,6 @@ public class Table extends AbstractTable {
 
                 } else { // update string column
                     HashMap<String, List<Row>> colData = ((HashMapColumn) col).getValues();
-                    System.out.println(rowData[colNo]);
-                    System.out.println(colData.get(rowData[colNo]));
                     colData.get(rowData[colNo]).remove(row); 
                     List<Row> newRows = new ArrayList<>();
                     if (colData.containsKey(columnNoToUpdate.get(colNo))) {
