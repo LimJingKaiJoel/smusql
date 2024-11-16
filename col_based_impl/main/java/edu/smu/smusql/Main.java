@@ -22,7 +22,8 @@ public class Main {
 
         // dbEngine.executeSQL("CREATE TABLE users (id, name, age, city)");
         // dbEngine.executeSQL("INSERT INTO users VALUES (1, 'Alice', 25, 'New York')");
-        // dbEngine.executeSQL("INSERT INTO users VALUES (2, 'Bob', 30, 'Los Angeles')");
+        // dbEngine.executeSQL("INSERT INTO users VALUES (2, 'Bob', 30, 'Los
+        // Angeles')");
 
         // System.out.println("You should see both rows");
         // System.out.println(dbEngine.executeSQL("SELECT * FROM users"));
@@ -31,20 +32,24 @@ public class Main {
         // System.out.println(dbEngine.executeSQL("SELECT name FROM users"));
 
         // System.out.println("You should see 'Alice', 25");
-        // System.out.println(dbEngine.executeSQL("SELECT name, age FROM users WHERE id = 1"));
+        // System.out.println(dbEngine.executeSQL("SELECT name, age FROM users WHERE id
+        // = 1"));
 
         // System.out.println("You should see 1, 'Alice', 25, 'New York'");
         // System.out.println(dbEngine.executeSQL("SELECT * FROM users WHERE id = 1"));
 
         // System.out.println("You should see both rows");
-        // System.out.println(dbEngine.executeSQL("SELECT * FROM users WHERE id = 1 OR name = 'Bob"));
+        // System.out.println(dbEngine.executeSQL("SELECT * FROM users WHERE id = 1 OR
+        // name = 'Bob"));
 
-        // dbEngine.executeSQL("UPDATE users SET age = 31 WHERE city = 'Los Angeles' OR id = 1");
+        // dbEngine.executeSQL("UPDATE users SET age = 31 WHERE city = 'Los Angeles' OR
+        // id = 1");
 
         // System.out.println("You should see both rows but age is 31");
         // System.out.println(dbEngine.executeSQL("SELECT * FROM users"));
 
-        // dbEngine.executeSQL("UPDATE users SET age = 55 WHERE id = 1 AND city = 'New York'");
+        // dbEngine.executeSQL("UPDATE users SET age = 55 WHERE id = 1 AND city = 'New
+        // York'");
 
         // System.out.println("You should see both rows but Alice age is 55");
         // System.out.println(dbEngine.executeSQL("SELECT * FROM users"));

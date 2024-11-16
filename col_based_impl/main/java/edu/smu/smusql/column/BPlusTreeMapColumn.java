@@ -33,6 +33,11 @@ public class BPlusTreeMapColumn extends AbstractColumn {
     }
 
     @Override
+    public AbstractMap<String, List<Row>> getValues() {
+        return this.values;
+    }
+
+    @Override
     public void insertRow(String columnValue, Row row) {
         List<Row> rows = this.values.get(columnValue);
         if (rows == null) {
@@ -87,6 +92,26 @@ public class BPlusTreeMapColumn extends AbstractColumn {
             });
         }
         
+        return result;
+    }
+
+    @Override
+    public List<Row> getRowsRange(String operator1, Object value1, String operator2, Object value2) {
+
+        List<Row> result = new ArrayList<>();
+
+        if (operator1.equals("=") && operator2.equals("=")) {
+            if (!this.values.containsKey(value1.toString()) || !this.values.containsKey(value2.toString())) {
+                return result;
+            }
+            result.addAll(this.values.get(value1.toString()));
+            result.retainAll(this.values.get(value2.toString()));
+        } else {
+            this.values.subMap(value1.toString(), operator1.equals("<="), value2.toString(), operator2.equals(">=")).forEach(
+                    (key, mapValue) -> {
+                        result.addAll(mapValue);
+                    });
+        }
         return result;
     }
 }

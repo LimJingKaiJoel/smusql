@@ -3,6 +3,8 @@ package edu.smu.smusql.column;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
+import java.util.Map;
+import java.util.AbstractMap;
 
 import edu.smu.smusql.Row;
 
@@ -18,6 +20,11 @@ public class TreeMapColumn extends AbstractColumn {
     public void initValues() {
         this.values = new TreeMap<>(new CustomComparator());
         // this.values = new TreeMap<>();
+    }
+
+    @Override
+    public AbstractMap<String, List<Row>> getValues() {
+        return this.values;
     }
 
     @Override
@@ -52,11 +59,11 @@ public class TreeMapColumn extends AbstractColumn {
             }
             result.addAll(this.values.get(value));
         } else if (operator.equals(">")) {
-            this.values.tailMap(value).forEach((key, mapValue) -> {
+            this.values.tailMap(value, false).forEach((key, mapValue) -> {
                 result.addAll(mapValue);
             });
         } else if (operator.equals("<")) {
-            this.values.headMap(value).forEach((key, mapValue) -> {
+            this.values.headMap(value, false).forEach((key, mapValue) -> {
                 result.addAll(mapValue);
             });
         } else if (operator.equals(">=")) {
@@ -75,6 +82,25 @@ public class TreeMapColumn extends AbstractColumn {
             });
         }
 
+        return result;
+    }
+
+    @Override
+    public List<Row> getRowsRange(String operator1, Object value1, String operator2, Object value2) {
+        List<Row> result = new ArrayList<>();
+
+        if (operator1.equals("=") && operator2.equals("=")) {
+            if (!this.values.containsKey(value1.toString()) || !this.values.containsKey(value2.toString())) {
+                return result;
+            }
+            result.addAll(this.values.get(value1.toString()));
+            result.retainAll(this.values.get(value2.toString()));
+        } else {
+            this.values.subMap(value1.toString(), operator1.equals("<="), value2.toString(), operator2.equals(">=")).forEach(
+                    (key, mapValue) -> {
+                        result.addAll(mapValue);
+                    });
+        }
         return result;
     }
 }

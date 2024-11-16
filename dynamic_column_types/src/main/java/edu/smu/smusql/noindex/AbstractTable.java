@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 
 import edu.smu.smusql.Row;
 import edu.smu.smusql.column.AbstractColumn;
@@ -112,7 +114,9 @@ public abstract class AbstractTable {
             filteredRows.retainAll(this.columns[columnNoMap.get(condition2.getColumnName())]
                     .getRows(condition2.getOperator(), condition2.getValue()));
         }
-
+        Set<Row> filteredRowsSet = new HashSet<>(filteredRows);
+        filteredRows.clear();
+        filteredRows.addAll(filteredRowsSet);
         return filteredRows;
     }
 }
