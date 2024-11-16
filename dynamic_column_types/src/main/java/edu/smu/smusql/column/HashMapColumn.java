@@ -11,7 +11,7 @@ public class HashMapColumn extends AbstractColumn {
     HashMap<String, List<Row>> values;
     public HashMapColumn(String name) {
         super(name);
-        initValues();
+        // initValues();
     }
 
     public void initValues() {
@@ -19,6 +19,9 @@ public class HashMapColumn extends AbstractColumn {
     }
 
     public void insertRow(String columnValue, Row row) {
+        if (this.values == null) {
+            this.initValues();
+        }
         List<Row> rows = this.getValues().get(columnValue);
         if (rows == null) {
             rows = new ArrayList<>();
@@ -28,6 +31,9 @@ public class HashMapColumn extends AbstractColumn {
     }
 
     public List<Row> getRows(String operator, Object val) {
+        if (this.values == null) {
+            return new ArrayList<>();
+        }
         String value = (String) val;
         List<Row> result = new ArrayList<>();
 
@@ -47,6 +53,9 @@ public class HashMapColumn extends AbstractColumn {
     }
 
     public HashMap<String, List<Row>> getValues() {
+        if (this.values == null) {
+            this.initValues();
+        }
         return values;
     }
 
