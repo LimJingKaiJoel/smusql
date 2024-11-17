@@ -59,8 +59,6 @@ UPDATE users SET name = Jack WHERE id = 1
 DELETE FROM users WHERE id = 1
 ```
 
-# Experiment Results
-
 ## Changing Implementations
 
 The areas to change implementations are marked with `// TODO:`. The steps on how to change the implementations are detailed above in this README.
