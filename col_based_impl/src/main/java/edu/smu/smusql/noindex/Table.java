@@ -23,7 +23,7 @@ public class Table extends AbstractTable {
 
         for (int i = 0; i < cols.length; i++) {
             // TODO: Change COLUMN IMPL here
-            cols[i] = new TreeMapColumn(colNames[i]);
+            cols[i] = new CustomHashMapColumn(colNames[i]);
             columnNoMap.put(colNames[i], i);
         }
 
