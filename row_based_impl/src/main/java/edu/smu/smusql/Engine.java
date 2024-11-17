@@ -47,7 +47,7 @@ public class Engine {
 
     protected AbstractTable createTable(String name, String[] columns) {
         // CHANGE THIS TABLE AS NEEDED -- and also the imports above 
-        return new TableCustomDynamicArray(name, columns);
+        return new TableArrayList(name, columns);
     }
 
     public String create(String query) {

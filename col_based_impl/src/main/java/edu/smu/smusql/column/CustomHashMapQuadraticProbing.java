@@ -48,8 +48,8 @@ public class CustomHashMapQuadraticProbing<K, V> extends AbstractMap<K, V> {
         if (resizingFactor <= 1.0f) {
             throw new IllegalArgumentException("Resizing factor must be greater than 1!!");
         }
-
-        this.capacity = initialCapacity;
+        
+        this.capacity = nextPrime(initialCapacity);
         this.loadFactor = loadFactor;
         this.resizingFactor = resizingFactor;
         this.threshold = (int) (capacity * loadFactor);
@@ -135,7 +135,7 @@ public class CustomHashMapQuadraticProbing<K, V> extends AbstractMap<K, V> {
     }
 
     private void resize() {
-        int newCapacity = (int) (capacity * resizingFactor);
+        int newCapacity = nextPrime((int) (capacity * resizingFactor));
         Entry<K, V>[] oldTable = table;
         table = new Entry[newCapacity];
         capacity = newCapacity;
@@ -177,5 +177,22 @@ public class CustomHashMapQuadraticProbing<K, V> extends AbstractMap<K, V> {
             }
         }
         return ks;
+    }
+
+    private int nextPrime(int n) {
+        while (true) {
+            if (isPrime(n)) return n;
+            n++;
+        }
+    }
+    
+    private boolean isPrime(int n) {
+        if (n <= 1) return false;
+        if (n <= 3) return true;
+        if (n % 2 == 0 || n % 3 == 0) return false;
+        for (int i = 5; i * i <= n; i += 6) {
+            if (n % i == 0 || n % (i + 2) == 0) return false;
+        }
+        return true;
     }
 }

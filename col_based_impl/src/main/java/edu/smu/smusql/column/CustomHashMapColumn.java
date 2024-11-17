@@ -16,7 +16,7 @@ public class CustomHashMapColumn extends AbstractColumn {
     public void initValues() {
         // CustomHashMap with initial capacity, load factor, and resizing factor
         // CHANGE HERE FOR TESTING AROUND
-        this.values = new CustomHashMapPseudorandomProbing<String, List<Row>>(16,0.5f, 3.0f);
+        this.values = new CustomHashMapQuadraticProbing<String, List<Row>>(16, 0.75f, 2.0f);
     }
 
     @Override
